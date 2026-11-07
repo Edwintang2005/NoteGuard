@@ -11,10 +11,11 @@
 		2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */; };
 		7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8640E6FD2A87A43E268C80C /* NoteDocument.swift */; };
 		76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */; };
+		7F263C222D3041E3FB2056A4 /* ShapeAssist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */; };
 		90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */; };
 		9EC4F4EDE7C609B41195A9DD /* ShieldControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7371385738D7994254D1EB95 /* ShieldControls.swift */; };
 		A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */; };
-		AA7565D16FF4B4602A0E33FF /* InkToolState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAC468F7B3412BDF7D9C56B /* InkToolState.swift */; };
+		C291332BBCA02BEE637FAB1F /* ShapeRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */; };
 		E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E99F9F86F76FE92205805 /* DeadZone.swift */; };
 		E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */; };
 		EC7D3C7112A81643803E8300 /* ShieldWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */; };
@@ -25,6 +26,7 @@
 		0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookToolbar.swift; sourceTree = "<group>"; };
 		1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentBrowserViewController.swift; sourceTree = "<group>"; };
 		2C1E99F9F86F76FE92205805 /* DeadZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadZone.swift; sourceTree = "<group>"; };
+		3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRecognizer.swift; sourceTree = "<group>"; };
 		4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTemplate.swift; sourceTree = "<group>"; };
 		4CCF049B3B601AB2FC750635 /* NoteGuard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NoteGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -32,9 +34,9 @@
 		54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorCanvas.swift; sourceTree = "<group>"; };
 		56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookViewController.swift; sourceTree = "<group>"; };
 		7371385738D7994254D1EB95 /* ShieldControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldControls.swift; sourceTree = "<group>"; };
+		B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeAssist.swift; sourceTree = "<group>"; };
 		C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorView.swift; sourceTree = "<group>"; };
 		C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldWindow.swift; sourceTree = "<group>"; };
-		CBAC468F7B3412BDF7D9C56B /* InkToolState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkToolState.swift; sourceTree = "<group>"; };
 		D8640E6FD2A87A43E268C80C /* NoteDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDocument.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -82,9 +84,10 @@
 		8576D84B7245A5184492B4C5 /* Notebook */ = {
 			isa = PBXGroup;
 			children = (
-				CBAC468F7B3412BDF7D9C56B /* InkToolState.swift */,
 				0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */,
 				56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */,
+				B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */,
+				3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */,
 			);
 			path = Notebook;
 			sourceTree = "<group>";
@@ -184,13 +187,14 @@
 				039F4371ECAE04ABFC31BD2D /* AppDelegate.swift in Sources */,
 				E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */,
 				A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */,
-				AA7565D16FF4B4602A0E33FF /* InkToolState.swift in Sources */,
 				90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */,
 				76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */,
 				7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */,
 				E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */,
 				2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */,
 				F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */,
+				7F263C222D3041E3FB2056A4 /* ShapeAssist.swift in Sources */,
+				C291332BBCA02BEE637FAB1F /* ShapeRecognizer.swift in Sources */,
 				9EC4F4EDE7C609B41195A9DD /* ShieldControls.swift in Sources */,
 				EC7D3C7112A81643803E8300 /* ShieldWindow.swift in Sources */,
 			);

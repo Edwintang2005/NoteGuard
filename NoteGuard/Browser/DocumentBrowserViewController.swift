@@ -22,9 +22,12 @@ final class DocumentBrowserViewController: UIDocumentBrowserViewController, UIDo
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // First launch: map the crack before anything else.
-        if !didOfferZoneSetup, DeadZoneStore.shared.shapes.isEmpty {
+        // First launch on this device: map the crack before anything else. After that, zones load
+        // automatically and the editor only opens from the Shield menu.
+        let store = DeadZoneStore.shared
+        if !didOfferZoneSetup, !store.hasShownSetup, store.shapes.isEmpty {
             didOfferZoneSetup = true
+            store.hasShownSetup = true
             ZoneEditorPresenter.present(from: self)
         }
     }
@@ -54,10 +57,26 @@ final class DocumentBrowserViewController: UIDocumentBrowserViewController, UIDo
                 showError("Couldn't open “\(url.lastPathComponent)”. It may not be a valid PDF.")
                 return
             }
-            let notebook = NotebookViewController(document: document) {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-            }
+            let notebook = NotebookViewController(
+                document: document,
+                rename: { [weak self] url, name, completion in self?.renameDocument(at: url, to: name, completion: completion) },
+                onClosed: { if accessing { url.stopAccessingSecurityScopedResource() } }
+            )
             present(notebook, animated: true)
+        }
+    }
+
+    /// Renames through the browser so it works for files in any location the browser can reach.
+    /// The open document is a file presenter, so it follows the file to its new name.
+    private func renameDocument(at url: URL, to name: String, completion: @escaping (Result<URL, Error>) -> Void) {
+        renameDocument(at: url, proposedName: name) { finalURL, error in
+            DispatchQueue.main.async {
+                if let finalURL {
+                    completion(.success(finalURL))
+                } else {
+                    completion(.failure(error ?? CocoaError(.fileWriteUnknown)))
+                }
+            }
         }
     }
 

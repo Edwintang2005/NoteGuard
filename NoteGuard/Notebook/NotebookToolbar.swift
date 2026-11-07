@@ -4,58 +4,62 @@ struct NotebookActions {
     var close: () -> Void
     var undo: () -> Void
     var redo: () -> Void
+    var rename: () -> Void
+    var share: () -> Void
+    var print: () -> Void
+    var togglePalette: () -> Void
     var addPage: (PageTemplate) -> Void
     var deletePage: () -> Void
     var toggleThumbnails: () -> Void
     var editZones: () -> Void
 }
 
+/// Document bar: title menu, scroll/palette toggles, undo/redo, pages, thumbnails and the shield.
+/// The drawing tools themselves live in the system palette, which you can move anywhere.
 struct NotebookToolbar: View {
-    @ObservedObject var tools: InkToolState
+    @ObservedObject var chrome: NotebookChrome
     @ObservedObject var store: DeadZoneStore
-    let title: String
     let actions: NotebookActions
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             Button(action: actions.close) {
-                Label("Files", systemImage: "chevron.backward")
+                Image(systemName: "chevron.backward")
             }
-            .labelStyle(.iconOnly)
             .accessibilityLabel("Save and close")
 
-            Text(title)
-                .font(.headline)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .layoutPriority(-1)
+            Menu {
+                Button("Rename…", systemImage: "pencil", action: actions.rename)
+                Button("Share…", systemImage: "square.and.arrow.up", action: actions.share)
+                Button("Print…", systemImage: "printer", action: actions.print)
+            } label: {
+                HStack(spacing: 4) {
+                    Text(chrome.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Image(systemName: "chevron.down.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .font(.subheadline)
+                }
+            }
+            .layoutPriority(-1)
+            .accessibilityLabel("Document menu, \(chrome.title)")
 
             Divider().frame(height: 24)
 
-            Picker("Tool", selection: $tools.tool) {
-                ForEach(InkToolState.Tool.allCases) { tool in
-                    Image(systemName: tool.symbol).tag(tool)
-                        .accessibilityLabel(tool.label)
-                }
+            Button {
+                chrome.isScrollMode.toggle()
+            } label: {
+                Image(systemName: chrome.isScrollMode ? "hand.raised.fill" : "hand.raised")
             }
-            .pickerStyle(.segmented)
-            .frame(width: 190)
+            .accessibilityLabel(chrome.isScrollMode ? "Scroll mode on" : "Scroll mode off")
 
-            HStack(spacing: 8) {
-                ForEach(InkToolState.inks.indices, id: \.self) { i in
-                    Button { tools.colorIndex = i } label: {
-                        Circle()
-                            .fill(Color(uiColor: InkToolState.inks[i]))
-                            .frame(width: 22, height: 22)
-                            .overlay(Circle().strokeBorder(.primary, lineWidth: tools.colorIndex == i ? 2.5 : 0).padding(-4))
-                    }
-                    .buttonStyle(.plain)
-                }
+            Button(action: actions.togglePalette) {
+                Image(systemName: chrome.isPaletteVisible ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
             }
-            .opacity(tools.tool.usesColor ? 1 : 0.35)
-            .disabled(!tools.tool.usesColor)
-
-            Divider().frame(height: 24)
+            .accessibilityLabel(chrome.isPaletteVisible ? "Hide tools" : "Show tools")
 
             Button(action: actions.undo) { Image(systemName: "arrow.uturn.backward") }
                 .accessibilityLabel("Undo")
@@ -79,7 +83,7 @@ struct NotebookToolbar: View {
 
             ShieldMenu(store: store, onEditZones: actions.editZones)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
     }

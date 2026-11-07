@@ -120,7 +120,15 @@ final class DeadZoneStore: ObservableObject {
     }
 
     private let defaultsKey = "deadZones.v1"
+    private let setupKey = "deadZones.setupShown"
     private var isLoading = false
+
+    /// Whether the first-launch zone setup has been shown on this device. Zones and this flag live
+    /// in this device's UserDefaults (not iCloud), since a crack belongs to one particular iPad.
+    var hasShownSetup: Bool {
+        get { UserDefaults.standard.bool(forKey: setupKey) }
+        set { UserDefaults.standard.set(newValue, forKey: setupKey) }
+    }
 
     init() { load() }
 

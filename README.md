@@ -9,14 +9,22 @@ cracked screen and a passive (non-Bluetooth) stylus.
   save *in place* wherever they live: iCloud Drive, On My iPad, Dropbox and so on. The app also shows
   up under "Open in…" for PDFs.
 - **New notebooks** in Blank, Lined, Grid or Dotted (A4), saved as normal PDFs.
-- **Handwriting on any PDF.** Pen, highlighter, eraser, four colours, undo/redo. One finger or the stylus
-  draws; two fingers scroll and zoom; the hand tool switches to one-finger scrolling.
+- **Markup tools from the Files app.** The system tool palette: pen, fineliner, highlighter, pencil,
+  crayon and more, colour picker with opacity, widths, pixel/object eraser, lasso, ruler, undo/redo.
+  Drag it to any edge or let it float; its position and tool are remembered. One finger or the stylus
+  draws; two fingers scroll and zoom; the hand button switches to one-finger scrolling.
+- **Draw and hold for shapes.** Pause at the end of a stroke to snap it to a line, angle, triangle,
+  rectangle, polygon, circle or ellipse (preview while holding, applied on lift). Undo once to get
+  the freehand stroke back.
+- **Rename, share and print** from the title menu. Move, duplicate, tag and delete are in the file
+  browser's long-press menu, same as Files.
 - **Pages.** Add a page of any style after the current one, delete pages, page thumbnails sidebar.
 - **Ink lives inside the PDF.** Each page's handwriting is saved as a standard PDF annotation with a
   rendered appearance, so Files, Preview and Acrobat all show it. The same annotation carries the raw
   PencilKit strokes, so reopening in NoteGuard gives back fully editable ink. No sidecar files.
 - **Dead-zone shield.** Map the cracked area once with freehand outlines, rectangles or ellipses, plus
-  a padding margin. Any touch that *starts* inside a zone is swallowed before the app sees it. Strokes
+  a padding margin. Zones are saved on the device (not synced, since a crack belongs to one iPad);
+  setup opens automatically only on first launch, and later from the Shield menu. Any touch that *starts* inside a zone is swallowed before the app sees it. Strokes
   that start outside and drift in keep drawing.
 
 ## How the shield works
