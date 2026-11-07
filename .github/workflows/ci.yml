@@ -1,0 +1,82 @@
+# Build gate for NoteGuard. Xcode Cloud (configured in App Store Connect) separately archives
+# pushes to main and uploads them to TestFlight; this workflow keeps main buildable.
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Only PR runs are cancelled mid-flight; on main a run finishes.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      DERIVED_DATA: build/DerivedData
+      RESULTS: build/Results
+    steps:
+      - uses: actions/checkout@v4
+
+      # Held to Xcode 26: warnings are errors, so a new major's diagnostics shouldn't turn
+      # main red unasked.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "^26.0"
+
+      - run: xcodebuild -version
+
+      # Pinned in .xcodegen-version (`make project` checks it too): another XcodeGen version
+      # can write a different project and fail the drift check.
+      - name: Install XcodeGen
+        run: |
+          XCODEGEN_VERSION=$(cat .xcodegen-version)
+          curl -sSfL -o xcodegen.zip \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
+          unzip -q xcodegen.zip -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+
+      # The project is generated but committed (Xcode Cloud builds from a plain clone).
+      - name: Committed project matches project.yml
+        run: |
+          xcodegen generate
+          # `status`, not `diff`: a file XcodeGen adds inside the bundle is untracked.
+          if [ -n "$(git status --porcelain -- NoteGuard.xcodeproj NoteGuard/Info.plist)" ]; then
+            git status --short -- NoteGuard.xcodeproj NoteGuard/Info.plist
+            echo "::error::NoteGuard.xcodeproj is stale — run 'make project' and commit it."
+            exit 1
+          fi
+
+      # Unsigned, warnings as errors.
+      - name: Build Debug
+        run: |
+          xcodebuild build -project NoteGuard.xcodeproj -scheme NoteGuard \
+            -destination "generic/platform=iOS Simulator" \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            -derivedDataPath "$DERIVED_DATA" -resultBundlePath "$RESULTS/build-debug.xcresult"
+
+      # Release too, so code that only compiles in Debug is caught before archive day.
+      - name: Build Release
+        run: |
+          xcodebuild build -project NoteGuard.xcodeproj -scheme NoteGuard \
+            -destination "generic/platform=iOS Simulator" \
+            -configuration Release CODE_SIGNING_ALLOWED=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            -derivedDataPath "$DERIVED_DATA" -resultBundlePath "$RESULTS/build-release.xcresult"
+
+      - name: Upload results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresults
+          path: build/Results
+          if-no-files-found: ignore

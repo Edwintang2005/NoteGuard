@@ -1,6 +1,10 @@
+# XcodeGen spec — the source of truth for NoteGuard.app.
+# Regenerate the Xcode project with:  make project     (or: xcodegen generate)
+# The generated NoteGuard.xcodeproj is committed (Xcode Cloud builds from a plain clone), so
+# commit it alongside any change here. Never change settings in Xcode's UI: they're overwritten.
 name: NoteGuard
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.NoteGuard
   deploymentTarget:
     iOS: "26.0"
 settings:
@@ -8,6 +12,8 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
     SWIFT_APPROACHABLE_CONCURRENCY: YES
+    # dSYMs for every archive, so TestFlight crash reports come back symbolicated.
+    DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
 targets:
   NoteGuard:
     type: application
@@ -15,15 +21,23 @@ targets:
     sources: [NoteGuard]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.NoteGuard
+        PRODUCT_BUNDLE_IDENTIFIER: com.NoteGuard.app
+        # iPad only. Must stay at target level: XcodeGen's target presets write "1,2", which
+        # would beat a project-level value.
         TARGETED_DEVICE_FAMILY: "2"
         CODE_SIGN_STYLE: Automatic
+        # Must live here, not just in Xcode's Signing tab, or `make project` wipes it.
+        DEVELOPMENT_TEAM: 3L8Q3U3WY3
+        # Xcode Cloud stamps its own build number on the archives it uploads; this value is
+        # what local/manual archives use. Keep it monotonic.
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
     info:
       path: NoteGuard/Info.plist
       properties:
         CFBundleDisplayName: NoteGuard
+        # Only Apple's standard HTTPS/file encryption is used, so no export-compliance paperwork.
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportsDocumentBrowser: true
         LSSupportsOpeningDocumentsInPlace: true
@@ -44,3 +58,14 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+
+schemes:
+  # Shared scheme: Xcode Cloud and CI both build it. Archive uses Release.
+  NoteGuard:
+    build:
+      targets:
+        NoteGuard: all
+    run:
+      config: Debug
+    archive:
+      config: Release

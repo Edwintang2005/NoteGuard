@@ -19,6 +19,8 @@
 		E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E99F9F86F76FE92205805 /* DeadZone.swift */; };
 		E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */; };
 		EC7D3C7112A81643803E8300 /* ShieldWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */; };
+		F11B535FCEAFD7E3902B03B0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 75321C227AF298518E951341 /* PrivacyInfo.xcprivacy */; };
+		F3647CDB744DB33CF32F13F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8DF1005C04553661DC75646C /* Assets.xcassets */; };
 		F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */; };
 /* End PBXBuildFile section */
 
@@ -34,6 +36,8 @@
 		54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorCanvas.swift; sourceTree = "<group>"; };
 		56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookViewController.swift; sourceTree = "<group>"; };
 		7371385738D7994254D1EB95 /* ShieldControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldControls.swift; sourceTree = "<group>"; };
+		75321C227AF298518E951341 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		8DF1005C04553661DC75646C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeAssist.swift; sourceTree = "<group>"; };
 		C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorView.swift; sourceTree = "<group>"; };
 		C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldWindow.swift; sourceTree = "<group>"; };
@@ -52,7 +56,9 @@
 		1E5BC37793A2DAA00476DDD1 /* NoteGuard */ = {
 			isa = PBXGroup;
 			children = (
+				8DF1005C04553661DC75646C /* Assets.xcassets */,
 				52F0551E8AA2453E2ABFB527 /* Info.plist */,
+				75321C227AF298518E951341 /* PrivacyInfo.xcprivacy */,
 				E8B89F50AFB7F7D3584EE140 /* App */,
 				2A872B1C053C66B167A4E185 /* Browser */,
 				8747CB2F3EF35C2439A58C66 /* Document */,
@@ -134,6 +140,7 @@
 			buildConfigurationList = 2863670243FAE130D7A329CD /* Build configuration list for PBXNativeTarget "NoteGuard" */;
 			buildPhases = (
 				958196C9DF800C31E865DE71 /* Sources */,
+				6D78E7F7281468B67BE11EB0 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -156,6 +163,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					390C4548AF1644DBAD380D4A = {
+						DevelopmentTeam = 3L8Q3U3WY3;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -178,6 +186,18 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6D78E7F7281468B67BE11EB0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F3647CDB744DB33CF32F13F9 /* Assets.xcassets in Resources */,
+				F11B535FCEAFD7E3902B03B0 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		958196C9DF800C31E865DE71 /* Sources */ = {
@@ -237,7 +257,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -275,13 +295,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3L8Q3U3WY3;
 				INFOPLIST_FILE = NoteGuard/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.NoteGuard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.NoteGuard.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
 			};
@@ -352,13 +373,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3L8Q3U3WY3;
 				INFOPLIST_FILE = NoteGuard/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.NoteGuard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.NoteGuard.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
 			};

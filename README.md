@@ -47,15 +47,40 @@ space), so they stay on the crack through rotation, Split View and Stage Manager
 | `NoteGuard/Notebook/` | Notebook editor: PDF view, per-page PencilKit canvases, toolbar |
 | `NoteGuard/Shield/` | Dead-zone model, shield window, shield menu |
 | `NoteGuard/ZoneEditor/` | Full-screen zone editor (freehand / rectangle / ellipse) |
-| `project.yml` | XcodeGen spec. Run `xcodegen generate` after adding or removing files |
+| `NoteGuard/Assets.xcassets` | App icon (1024px, no alpha) |
+| `NoteGuard/PrivacyInfo.xcprivacy` | Privacy manifest (UserDefaults reason CA92.1; no tracking or data collection) |
+| `project.yml` | XcodeGen spec, the source of truth for the Xcode project |
+| `Makefile` | `make project` (regenerate), `make build` / `make release` (CI's compile checks) |
+| `.github/workflows/ci.yml` | GitHub Actions build gate on pushes and PRs |
 
-## Install on your iPad
+## Working on the project
 
-1. Open `NoteGuard.xcodeproj` in Xcode.
-2. Select the **NoteGuard** target, open **Signing & Capabilities**, choose your team, and change
-   the bundle identifier from `com.example.NoteGuard` to one of your own.
-3. Connect the iPad, select it as the run destination, and press Run.
-4. On the iPad, enable Developer Mode if prompted (Settings → Privacy & Security → Developer Mode).
+`NoteGuard.xcodeproj` is **generated** from `project.yml` with `make project`, but **committed**,
+because Xcode Cloud builds from a plain clone and fails without it. After adding or renaming files,
+run `make project` and commit the regenerated project with the change. Never change settings in
+Xcode's UI (signing, versions, Info.plist): they're overwritten on the next regeneration. XcodeGen
+is pinned in `.xcodegen-version`, and `make project` refuses any other version.
+
+Signing (team `3L8Q3U3WY3`, bundle `com.NoteGuard.app`) lives in `project.yml`.
+
+## Release pathway (same as Pair and Red String)
+
+1. **Push to `main`** on GitHub.
+2. **GitHub Actions** (`ci.yml`) checks the committed project matches `project.yml`, then builds
+   Debug and Release unsigned with warnings as errors.
+3. **Xcode Cloud** (workflow configured in App Store Connect, start condition: branch changes on
+   `main`) archives the `NoteGuard` scheme in Release and uploads to TestFlight. Xcode Cloud stamps
+   its own build numbers on these. The workflow's `manifest.json` lives in
+   `NoteGuard.xcodeproj/xcshareddata/xcodecloud/` and is written by Xcode when the workflow is created.
+4. The build lands in **TestFlight → Internal Testing** and installs via the TestFlight app.
+
+For a manual upload instead: Product → Archive (destination "Any iOS Device"), then Organizer →
+Distribute App → TestFlight & App Store. Bump `CURRENT_PROJECT_VERSION` in `project.yml` first.
+
+## Install on your iPad directly
+
+Open `NoteGuard.xcodeproj`, connect the iPad, select it as the run destination, and press Run.
+Enable Developer Mode on the iPad if prompted (Settings → Privacy & Security → Developer Mode).
 
 On first launch the zone editor opens: trace around the crack, tap Done, then press around the
 crack. Each blocked touch flashes red and bumps the counter in the shield menu.
