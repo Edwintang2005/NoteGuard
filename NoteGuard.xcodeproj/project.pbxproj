@@ -1,0 +1,387 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		039F4371ECAE04ABFC31BD2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */; };
+		2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */; };
+		7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8640E6FD2A87A43E268C80C /* NoteDocument.swift */; };
+		76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */; };
+		90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */; };
+		9EC4F4EDE7C609B41195A9DD /* ShieldControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7371385738D7994254D1EB95 /* ShieldControls.swift */; };
+		A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */; };
+		AA7565D16FF4B4602A0E33FF /* InkToolState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAC468F7B3412BDF7D9C56B /* InkToolState.swift */; };
+		E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E99F9F86F76FE92205805 /* DeadZone.swift */; };
+		E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */; };
+		EC7D3C7112A81643803E8300 /* ShieldWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */; };
+		F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookToolbar.swift; sourceTree = "<group>"; };
+		1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentBrowserViewController.swift; sourceTree = "<group>"; };
+		2C1E99F9F86F76FE92205805 /* DeadZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadZone.swift; sourceTree = "<group>"; };
+		4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTemplate.swift; sourceTree = "<group>"; };
+		4CCF049B3B601AB2FC750635 /* NoteGuard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NoteGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		52F0551E8AA2453E2ABFB527 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorCanvas.swift; sourceTree = "<group>"; };
+		56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookViewController.swift; sourceTree = "<group>"; };
+		7371385738D7994254D1EB95 /* ShieldControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldControls.swift; sourceTree = "<group>"; };
+		C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorView.swift; sourceTree = "<group>"; };
+		C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldWindow.swift; sourceTree = "<group>"; };
+		CBAC468F7B3412BDF7D9C56B /* InkToolState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkToolState.swift; sourceTree = "<group>"; };
+		D8640E6FD2A87A43E268C80C /* NoteDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDocument.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0E57C66A2E11FC7DC92F8732 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4CCF049B3B601AB2FC750635 /* NoteGuard.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1E5BC37793A2DAA00476DDD1 /* NoteGuard */ = {
+			isa = PBXGroup;
+			children = (
+				52F0551E8AA2453E2ABFB527 /* Info.plist */,
+				E8B89F50AFB7F7D3584EE140 /* App */,
+				2A872B1C053C66B167A4E185 /* Browser */,
+				8747CB2F3EF35C2439A58C66 /* Document */,
+				8576D84B7245A5184492B4C5 /* Notebook */,
+				6F59E6A384E97EFE47C4EBEA /* Shield */,
+				E167B87554755BFAE4A22CF9 /* ZoneEditor */,
+			);
+			path = NoteGuard;
+			sourceTree = "<group>";
+		};
+		2A872B1C053C66B167A4E185 /* Browser */ = {
+			isa = PBXGroup;
+			children = (
+				1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */,
+			);
+			path = Browser;
+			sourceTree = "<group>";
+		};
+		6F59E6A384E97EFE47C4EBEA /* Shield */ = {
+			isa = PBXGroup;
+			children = (
+				2C1E99F9F86F76FE92205805 /* DeadZone.swift */,
+				7371385738D7994254D1EB95 /* ShieldControls.swift */,
+				C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */,
+			);
+			path = Shield;
+			sourceTree = "<group>";
+		};
+		8576D84B7245A5184492B4C5 /* Notebook */ = {
+			isa = PBXGroup;
+			children = (
+				CBAC468F7B3412BDF7D9C56B /* InkToolState.swift */,
+				0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */,
+				56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */,
+			);
+			path = Notebook;
+			sourceTree = "<group>";
+		};
+		8747CB2F3EF35C2439A58C66 /* Document */ = {
+			isa = PBXGroup;
+			children = (
+				D8640E6FD2A87A43E268C80C /* NoteDocument.swift */,
+				4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */,
+			);
+			path = Document;
+			sourceTree = "<group>";
+		};
+		A535688586C593144398207B = {
+			isa = PBXGroup;
+			children = (
+				1E5BC37793A2DAA00476DDD1 /* NoteGuard */,
+				0E57C66A2E11FC7DC92F8732 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E167B87554755BFAE4A22CF9 /* ZoneEditor */ = {
+			isa = PBXGroup;
+			children = (
+				54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */,
+				C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */,
+			);
+			path = ZoneEditor;
+			sourceTree = "<group>";
+		};
+		E8B89F50AFB7F7D3584EE140 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		390C4548AF1644DBAD380D4A /* NoteGuard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2863670243FAE130D7A329CD /* Build configuration list for PBXNativeTarget "NoteGuard" */;
+			buildPhases = (
+				958196C9DF800C31E865DE71 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NoteGuard;
+			packageProductDependencies = (
+			);
+			productName = NoteGuard;
+			productReference = 4CCF049B3B601AB2FC750635 /* NoteGuard.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2368ED66430D1DB18A555460 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					390C4548AF1644DBAD380D4A = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D158D08A93986FF7F9031AF1 /* Build configuration list for PBXProject "NoteGuard" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = A535688586C593144398207B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0E57C66A2E11FC7DC92F8732 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				390C4548AF1644DBAD380D4A /* NoteGuard */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		958196C9DF800C31E865DE71 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				039F4371ECAE04ABFC31BD2D /* AppDelegate.swift in Sources */,
+				E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */,
+				A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */,
+				AA7565D16FF4B4602A0E33FF /* InkToolState.swift in Sources */,
+				90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */,
+				76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */,
+				7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */,
+				E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */,
+				2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */,
+				F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */,
+				9EC4F4EDE7C609B41195A9DD /* ShieldControls.swift in Sources */,
+				EC7D3C7112A81643803E8300 /* ShieldWindow.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		37B28BDEE3C6686B581A909D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		CAB7599BED2FC34BB1F3C181 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = NoteGuard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.NoteGuard;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		DDB3784DDC4081E096F52BD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		EC4499A971F322686C05CA61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = NoteGuard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.NoteGuard;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2863670243FAE130D7A329CD /* Build configuration list for PBXNativeTarget "NoteGuard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EC4499A971F322686C05CA61 /* Debug */,
+				CAB7599BED2FC34BB1F3C181 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D158D08A93986FF7F9031AF1 /* Build configuration list for PBXProject "NoteGuard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37B28BDEE3C6686B581A909D /* Debug */,
+				DDB3784DDC4081E096F52BD1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2368ED66430D1DB18A555460 /* Project object */;
+}
