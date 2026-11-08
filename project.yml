@@ -15,6 +15,20 @@ settings:
     # dSYMs for every archive, so TestFlight crash reports come back symbolicated.
     DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
 targets:
+  # Unit tests (Swift Testing), hosted in the app so UIKit, PDFKit and PencilKit behave as on device.
+  NoteGuardTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests/NoteGuardTests]
+    dependencies:
+      - target: NoteGuard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.NoteGuard.app.tests
+        TARGETED_DEVICE_FAMILY: "2"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 3L8Q3U3WY3
   NoteGuard:
     type: application
     platform: iOS
@@ -65,7 +79,12 @@ schemes:
     build:
       targets:
         NoteGuard: all
+        NoteGuardTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - NoteGuardTests
     archive:
       config: Release

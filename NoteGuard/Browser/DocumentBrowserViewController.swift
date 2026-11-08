@@ -95,10 +95,11 @@ final class DocumentBrowserViewController: UIDocumentBrowserViewController, UIDo
     func documentBrowser(_ controller: UIDocumentBrowserViewController,
                          didRequestDocumentCreationWithHandler importHandler: @escaping (URL?, UIDocumentBrowserViewController.ImportMode) -> Void) {
         let chooser = UIAlertController(title: "New notebook", message: "Choose a page style. You can add pages of any style later.", preferredStyle: .alert)
-        for template in PageTemplate.allCases {
-            chooser.addAction(UIAlertAction(title: template.title, style: .default) { _ in
+        let sources = PageTemplate.allCases.map(PageSource.builtIn) + TemplateLibrary.shared.all().map(PageSource.custom)
+        for source in sources {
+            chooser.addAction(UIAlertAction(title: source.title, style: .default) { _ in
                 do {
-                    importHandler(try template.makeNotebookFile(), .move)
+                    importHandler(try source.makeNotebookFile(), .move)
                 } catch {
                     importHandler(nil, .none)
                 }

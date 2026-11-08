@@ -1,0 +1,9 @@
+{
+  "id" : "17e1bf77-75ed-4b08-92f1-534d12dfa1aa",
+  "targets" : [
+    {
+      "id" : "aaad0e44-4114-4b45-a7ef-b20f7cdbe65c",
+      "name" : "NoteGuard"
+    }
+  ]
+}

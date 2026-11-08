@@ -9,25 +9,49 @@
 /* Begin PBXBuildFile section */
 		039F4371ECAE04ABFC31BD2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */; };
 		2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */; };
+		51839F67FBB504899579AB9B /* ImageAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279FF731DE8A6EFF1B400DA0 /* ImageAnnotation.swift */; };
+		66BAD73E6F5113DE6981FFFF /* PageSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3561B3CDE753615CA36F97E5 /* PageSidebar.swift */; };
 		7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8640E6FD2A87A43E268C80C /* NoteDocument.swift */; };
+		74C6AF2599529B33016195CE /* NoteDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604607C3216A2A7E00C6B1BD /* NoteDocumentTests.swift */; };
 		76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */; };
 		7F263C222D3041E3FB2056A4 /* ShapeAssist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */; };
 		90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */; };
 		9EC4F4EDE7C609B41195A9DD /* ShieldControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7371385738D7994254D1EB95 /* ShieldControls.swift */; };
+		A031AFF3A758F3F9C9D38E41 /* InkAndTemplateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E3CC20480C19CB965273F2 /* InkAndTemplateTests.swift */; };
 		A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */; };
+		AF1CA8C88A778ABB117D8FED /* ObjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E983402ED7CA11BB9191C67E /* ObjectEditor.swift */; };
+		BEF20D1E6C4CBE34FADA80CA /* InkAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388CCAC10E4EFC5C12CA62D1 /* InkAnnotation.swift */; };
 		C291332BBCA02BEE637FAB1F /* ShapeRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */; };
+		D152359DD2D04402D54D07A7 /* ShapeRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C7D2FE4D62C5CE376F6646 /* ShapeRecognizerTests.swift */; };
+		D2F73F3E1076CEAAFF8BFD9D /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B564F915EDECDB033FE42AB2 /* TestSupport.swift */; };
+		DDF0A6ABC6489F048BD4B32E /* DeadZoneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C997332F3B41A10DE717285A /* DeadZoneTests.swift */; };
 		E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E99F9F86F76FE92205805 /* DeadZone.swift */; };
 		E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */; };
 		EC7D3C7112A81643803E8300 /* ShieldWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */; };
 		F11B535FCEAFD7E3902B03B0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 75321C227AF298518E951341 /* PrivacyInfo.xcprivacy */; };
+		F2D46FFC819F3B2CB151E630 /* InkRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE02C81380C7745528DFC411 /* InkRenderer.swift */; };
 		F3647CDB744DB33CF32F13F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8DF1005C04553661DC75646C /* Assets.xcassets */; };
 		F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		9EB60F4830F052A6312775DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2368ED66430D1DB18A555460 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 390C4548AF1644DBAD380D4A;
+			remoteInfo = NoteGuard;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookToolbar.swift; sourceTree = "<group>"; };
+		0B8C5729FAE7011169AAF3C0 /* NoteGuardTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoteGuardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentBrowserViewController.swift; sourceTree = "<group>"; };
+		279FF731DE8A6EFF1B400DA0 /* ImageAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageAnnotation.swift; sourceTree = "<group>"; };
 		2C1E99F9F86F76FE92205805 /* DeadZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadZone.swift; sourceTree = "<group>"; };
+		3561B3CDE753615CA36F97E5 /* PageSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSidebar.swift; sourceTree = "<group>"; };
+		388CCAC10E4EFC5C12CA62D1 /* InkAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkAnnotation.swift; sourceTree = "<group>"; };
 		3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRecognizer.swift; sourceTree = "<group>"; };
 		4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTemplate.swift; sourceTree = "<group>"; };
 		4CCF049B3B601AB2FC750635 /* NoteGuard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NoteGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -35,20 +59,41 @@
 		52F0551E8AA2453E2ABFB527 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		54415B9959D9A07BF0864570 /* MaskEditorCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorCanvas.swift; sourceTree = "<group>"; };
 		56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookViewController.swift; sourceTree = "<group>"; };
+		604607C3216A2A7E00C6B1BD /* NoteDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDocumentTests.swift; sourceTree = "<group>"; };
 		7371385738D7994254D1EB95 /* ShieldControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldControls.swift; sourceTree = "<group>"; };
 		75321C227AF298518E951341 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		8DF1005C04553661DC75646C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1C7D2FE4D62C5CE376F6646 /* ShapeRecognizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRecognizerTests.swift; sourceTree = "<group>"; };
 		B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeAssist.swift; sourceTree = "<group>"; };
+		B564F915EDECDB033FE42AB2 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 		C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorView.swift; sourceTree = "<group>"; };
 		C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldWindow.swift; sourceTree = "<group>"; };
+		C997332F3B41A10DE717285A /* DeadZoneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadZoneTests.swift; sourceTree = "<group>"; };
+		CE02C81380C7745528DFC411 /* InkRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkRenderer.swift; sourceTree = "<group>"; };
 		D8640E6FD2A87A43E268C80C /* NoteDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDocument.swift; sourceTree = "<group>"; };
+		E983402ED7CA11BB9191C67E /* ObjectEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectEditor.swift; sourceTree = "<group>"; };
+		F8E3CC20480C19CB965273F2 /* InkAndTemplateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkAndTemplateTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		00D65C05F0969824E459FCD0 /* NoteGuardTests */ = {
+			isa = PBXGroup;
+			children = (
+				C997332F3B41A10DE717285A /* DeadZoneTests.swift */,
+				F8E3CC20480C19CB965273F2 /* InkAndTemplateTests.swift */,
+				604607C3216A2A7E00C6B1BD /* NoteDocumentTests.swift */,
+				A1C7D2FE4D62C5CE376F6646 /* ShapeRecognizerTests.swift */,
+				B564F915EDECDB033FE42AB2 /* TestSupport.swift */,
+			);
+			name = NoteGuardTests;
+			path = Tests/NoteGuardTests;
+			sourceTree = "<group>";
+		};
 		0E57C66A2E11FC7DC92F8732 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				4CCF049B3B601AB2FC750635 /* NoteGuard.app */,
+				0B8C5729FAE7011169AAF3C0 /* NoteGuardTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -92,6 +137,8 @@
 			children = (
 				0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */,
 				56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */,
+				E983402ED7CA11BB9191C67E /* ObjectEditor.swift */,
+				3561B3CDE753615CA36F97E5 /* PageSidebar.swift */,
 				B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */,
 				3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */,
 			);
@@ -101,6 +148,9 @@
 		8747CB2F3EF35C2439A58C66 /* Document */ = {
 			isa = PBXGroup;
 			children = (
+				279FF731DE8A6EFF1B400DA0 /* ImageAnnotation.swift */,
+				388CCAC10E4EFC5C12CA62D1 /* InkAnnotation.swift */,
+				CE02C81380C7745528DFC411 /* InkRenderer.swift */,
 				D8640E6FD2A87A43E268C80C /* NoteDocument.swift */,
 				4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */,
 			);
@@ -111,6 +161,7 @@
 			isa = PBXGroup;
 			children = (
 				1E5BC37793A2DAA00476DDD1 /* NoteGuard */,
+				00D65C05F0969824E459FCD0 /* NoteGuardTests */,
 				0E57C66A2E11FC7DC92F8732 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -135,6 +186,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0B8B43414035D955234A1826 /* NoteGuardTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B90F03590A391EDA61C37150 /* Build configuration list for PBXNativeTarget "NoteGuardTests" */;
+			buildPhases = (
+				BF6D60B54EE4FFDD9BDE3128 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F74491B2CB4488213171C11C /* PBXTargetDependency */,
+			);
+			name = NoteGuardTests;
+			packageProductDependencies = (
+			);
+			productName = NoteGuardTests;
+			productReference = 0B8C5729FAE7011169AAF3C0 /* NoteGuardTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		390C4548AF1644DBAD380D4A /* NoteGuard */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2863670243FAE130D7A329CD /* Build configuration list for PBXNativeTarget "NoteGuard" */;
@@ -162,6 +231,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					0B8B43414035D955234A1826 = {
+						DevelopmentTeam = 3L8Q3U3WY3;
+						ProvisioningStyle = Automatic;
+					};
 					390C4548AF1644DBAD380D4A = {
 						DevelopmentTeam = 3L8Q3U3WY3;
 						ProvisioningStyle = Automatic;
@@ -182,6 +255,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				0B8B43414035D955234A1826 /* NoteGuardTests */,
 				390C4548AF1644DBAD380D4A /* NoteGuard */,
 			);
 		};
@@ -207,11 +281,16 @@
 				039F4371ECAE04ABFC31BD2D /* AppDelegate.swift in Sources */,
 				E6975978166492C5FDB2FA4B /* DeadZone.swift in Sources */,
 				A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */,
+				51839F67FBB504899579AB9B /* ImageAnnotation.swift in Sources */,
+				BEF20D1E6C4CBE34FADA80CA /* InkAnnotation.swift in Sources */,
+				F2D46FFC819F3B2CB151E630 /* InkRenderer.swift in Sources */,
 				90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */,
 				76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */,
 				7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */,
 				E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */,
 				2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */,
+				AF1CA8C88A778ABB117D8FED /* ObjectEditor.swift in Sources */,
+				66BAD73E6F5113DE6981FFFF /* PageSidebar.swift in Sources */,
 				F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */,
 				7F263C222D3041E3FB2056A4 /* ShapeAssist.swift in Sources */,
 				C291332BBCA02BEE637FAB1F /* ShapeRecognizer.swift in Sources */,
@@ -220,9 +299,48 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BF6D60B54EE4FFDD9BDE3128 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DDF0A6ABC6489F048BD4B32E /* DeadZoneTests.swift in Sources */,
+				A031AFF3A758F3F9C9D38E41 /* InkAndTemplateTests.swift in Sources */,
+				74C6AF2599529B33016195CE /* NoteDocumentTests.swift in Sources */,
+				D152359DD2D04402D54D07A7 /* ShapeRecognizerTests.swift in Sources */,
+				D2F73F3E1076CEAAFF8BFD9D /* TestSupport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		F74491B2CB4488213171C11C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 390C4548AF1644DBAD380D4A /* NoteGuard */;
+			targetProxy = 9EB60F4830F052A6312775DB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		2EB279D6EC59892D997EDBAE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 3L8Q3U3WY3;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.NoteGuard.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NoteGuard.app/NoteGuard";
+			};
+			name = Debug;
+		};
 		37B28BDEE3C6686B581A909D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -366,6 +484,25 @@
 			};
 			name = Release;
 		};
+		E1B24A7617A1BF0BE8B783F4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 3L8Q3U3WY3;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.NoteGuard.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NoteGuard.app/NoteGuard";
+			};
+			name = Release;
+		};
 		EC4499A971F322686C05CA61 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -394,6 +531,15 @@
 			buildConfigurations = (
 				EC4499A971F322686C05CA61 /* Debug */,
 				CAB7599BED2FC34BB1F3C181 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B90F03590A391EDA61C37150 /* Build configuration list for PBXNativeTarget "NoteGuardTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2EB279D6EC59892D997EDBAE /* Debug */,
+				E1B24A7617A1BF0BE8B783F4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

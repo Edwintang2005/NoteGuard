@@ -55,14 +55,29 @@ jobs:
             exit 1
           fi
 
-      # Unsigned, warnings as errors.
-      - name: Build Debug
+      # NoteGuard is iPad-only, so tests need an iPad simulator.
+      - name: Pick an iPad simulator
         run: |
-          xcodebuild build -project NoteGuard.xcodeproj -scheme NoteGuard \
-            -destination "generic/platform=iOS Simulator" \
+          SIM=$(xcrun simctl list devices available -j \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for r in sorted(d, reverse=True) if "iOS" in r for x in d[r] if x["name"].startswith("iPad")))')
+          echo "Using $SIM"
+          echo "SIM=$SIM" >> "$GITHUB_ENV"
+
+      # Unsigned, warnings as errors: the app plus the unit tests.
+      - name: Build Debug for testing
+        run: |
+          xcodebuild build-for-testing -project NoteGuard.xcodeproj -scheme NoteGuard \
+            -destination "id=$SIM" \
             -configuration Debug CODE_SIGNING_ALLOWED=NO \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
             -derivedDataPath "$DERIVED_DATA" -resultBundlePath "$RESULTS/build-debug.xcresult"
+
+      - name: Unit tests
+        run: |
+          xcodebuild test-without-building -project NoteGuard.xcodeproj -scheme NoteGuard \
+            -destination "id=$SIM" \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath "$DERIVED_DATA" -resultBundlePath "$RESULTS/unit-tests.xcresult"
 
       # Release too, so code that only compiles in Debug is caught before archive day.
       - name: Build Release

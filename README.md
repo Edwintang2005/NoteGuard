@@ -18,10 +18,22 @@ cracked screen and a passive (non-Bluetooth) stylus.
   the freehand stroke back.
 - **Rename, share and print** from the title menu. Move, duplicate, tag and delete are in the file
   browser's long-press menu, same as Files.
-- **Pages.** Add a page of any style after the current one, delete pages, page thumbnails sidebar.
-- **Ink lives inside the PDF.** Each page's handwriting is saved as a standard PDF annotation with a
-  rendered appearance, so Files, Preview and Acrobat all show it. The same annotation carries the raw
+- **Text boxes and images.** Insert a text box, a photo or an image from Files. The Select tool (arrow)
+  moves them, resizes them from the corners (images keep their shape), double-tap edits text, and
+  an edit menu offers text size, duplicate and delete. Text boxes are standard PDF FreeText
+  annotations in Helvetica, so every PDF reader shows them the same.
+- **Pages.** A sidebar of thumbnails that include your handwriting: tap to jump, drag to reorder,
+  long-press to duplicate, bookmark, save as template or delete. Templates: Blank, Lined, Grid,
+  Dotted, Cornell Notes, Music Staves, Weekly Planner, plus any page you save as your own template.
+- **Bookmarks** are the PDF's outline, so other readers list them too (and outlines that came with a
+  PDF, such as a textbook's chapters, show up in the Bookmarks tab).
+- **Everything is undoable:** strokes, shapes, page add/delete/move/duplicate, bookmarks, text and
+  image edits.
+- **Ink lives inside the PDF, as vectors.** Each page's handwriting is saved as a standard PDF
+  annotation drawn with vector paths (textured pencil/crayon/watercolour strokes as 288 dpi images),
+  so Files, Preview and Acrobat show it crisply at any zoom. The same annotation carries the raw
   PencilKit strokes, so reopening in NoteGuard gives back fully editable ink. No sidecar files.
+  Saving is a single pass: 100 inked pages serialise in about half a second.
 - **Dead-zone shield.** Map the cracked area once with freehand outlines, rectangles or ellipses, plus
   a padding margin. Zones are saved on the device (not synced, since a crack belongs to one iPad);
   setup opens automatically only on first launch, and later from the Shield menu. Any touch that *starts* inside a zone is swallowed before the app sees it. Strokes
@@ -43,15 +55,17 @@ space), so they stay on the crack through rotation, Split View and Stage Manager
 |---|---|
 | `NoteGuard/App/` | App and scene delegates (window setup, "Open in", shield refit on resize) |
 | `NoteGuard/Browser/` | Files browser home screen, new-notebook flow |
-| `NoteGuard/Document/` | `NoteDocument` (PDF load/save, ink annotations), page templates |
-| `NoteGuard/Notebook/` | Notebook editor: PDF view, per-page PencilKit canvases, toolbar |
+| `NoteGuard/Document/` | `NoteDocument` (load/save, undoable page/bookmark/object edits), `InkRenderer` (vector ink), ink and image annotations, templates |
+| `NoteGuard/Notebook/` | Notebook editor: PDF view, per-page PencilKit canvases, toolbar, page sidebar, Select tool, shape snapping |
+| `Tests/NoteGuardTests/` | Unit tests (Swift Testing): shapes, zones, save/reopen, undo, templates, vector-ink accuracy, save speed |
+| `tools/make_icon.swift` | Draws the app icon (`make icon`) |
 | `NoteGuard/Shield/` | Dead-zone model, shield window, shield menu |
 | `NoteGuard/ZoneEditor/` | Full-screen zone editor (freehand / rectangle / ellipse) |
 | `NoteGuard/Assets.xcassets` | App icon (1024px, no alpha) |
 | `NoteGuard/PrivacyInfo.xcprivacy` | Privacy manifest (UserDefaults reason CA92.1; no tracking or data collection) |
 | `project.yml` | XcodeGen spec, the source of truth for the Xcode project |
-| `Makefile` | `make project` (regenerate), `make build` / `make release` (CI's compile checks) |
-| `.github/workflows/ci.yml` | GitHub Actions build gate on pushes and PRs |
+| `Makefile` | `make project` (regenerate), `make build` / `make release` (compile checks), `make test` (unit tests on an iPad simulator) |
+| `.github/workflows/ci.yml` | GitHub Actions on pushes and PRs: project drift check, unit tests, Debug and Release builds |
 
 ## Working on the project
 
@@ -87,7 +101,7 @@ crack. Each blocked touch flashes red and bumps the counter in the shield menu.
 
 ## Known gaps
 
-- Page thumbnails don't show handwriting yet (ink is drawn live, not baked into the page).
-- Ink in the saved PDF is a high-resolution image (about 288 dpi), not vector paths.
-- Adding and deleting pages isn't on the undo stack yet.
+- Textured inks (pencil, crayon, watercolour) are saved as high-resolution images rather than vectors.
+- Whole-PDF rewrites on save: fast for notebooks, but a several-hundred-page scanned textbook will
+  still take a moment each autosave (PDFKit has no incremental save).
 - Inside the Files browser itself the zone tint may not be visible, though blocking still applies.

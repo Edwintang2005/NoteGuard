@@ -4,10 +4,14 @@ import PencilKit
 
 /// A plain PDF file opened in place. There is no private format:
 ///
-/// - Handwriting is saved *inside the PDF* as one annotation per page, with a normal
-///   appearance stream, so Files, Preview, Acrobat and friends all show it.
-/// - The same annotation carries the raw PencilKit stroke data, so when the PDF is reopened
-///   here the ink comes back fully editable (erase, undo, recolour later).
+/// - Handwriting is saved *inside the PDF* as one annotation per page, with a vector appearance
+///   stream, so Files, Preview, Acrobat and friends all show it. The same annotation carries the
+///   raw PencilKit stroke data, so the ink comes back fully editable here.
+/// - Text boxes are standard FreeText annotations; images are stamps that carry their picture.
+/// - Bookmarks are the PDF's outline, so other readers list them too.
+///
+/// Every structural change (pages, bookmarks, text boxes, images) is undoable through
+/// `undoManager`, which also tells UIDocument the file has unsaved changes.
 final class NoteDocument: UIDocument {
     enum DocumentError: LocalizedError {
         case unreadable, unwritable
@@ -25,6 +29,15 @@ final class NoteDocument: UIDocument {
     /// down, 1 unit = 1 PDF point. Keyed by page object so inserting pages can't shuffle ink.
     var drawings: [ObjectIdentifier: PKDrawing] = [:]
 
+    /// After pages are inserted, removed or moved (including by undo and redo).
+    var onPagesChanged: (() -> Void)?
+    /// After bookmarks change.
+    var onBookmarksChanged: (() -> Void)?
+    /// After a text box or image on `page` is added, removed or edited.
+    var onAnnotationsChanged: ((PDFPage) -> Void)?
+
+    // MARK: Loading and saving
+
     override func load(fromContents contents: Any, ofType typeName: String?) throws {
         guard let data = contents as? Data, let document = PDFDocument(data: data) else {
             throw DocumentError.unreadable
@@ -34,15 +47,20 @@ final class NoteDocument: UIDocument {
         for index in 0..<document.pageCount {
             guard let page = document.page(at: index) else { continue }
             var ink = PKDrawing()
-            var found = false
+            var foundInk = false
             for annotation in page.annotations {
-                guard let drawing = InkAnnotation.drawing(from: annotation) else { continue }
-                ink.append(drawing)
-                found = true
-                // The live canvas shows this ink now; drop the static copy so it isn't drawn twice.
-                page.removeAnnotation(annotation)
+                if let drawing = InkAnnotation.drawing(from: annotation) {
+                    ink.append(drawing)
+                    foundInk = true
+                    // The live canvas shows this ink now; drop the static copy so it isn't drawn twice.
+                    page.removeAnnotation(annotation)
+                } else if let image = ImageAnnotation.restore(from: annotation) {
+                    // Swap the static stamp for an editable image.
+                    page.removeAnnotation(annotation)
+                    page.addAnnotation(image)
+                }
             }
-            if found { drawings[ObjectIdentifier(page)] = ink }
+            if foundInk { drawings[ObjectIdentifier(page)] = ink }
         }
 
         pdf = document
@@ -50,17 +68,19 @@ final class NoteDocument: UIDocument {
     }
 
     override func contents(forType typeName: String) throws -> Any {
-        // Work on a copy so the open document never shows the static ink annotations.
-        guard let base = pdf.dataRepresentation(), let output = PDFDocument(data: base) else {
-            throw DocumentError.unwritable
-        }
+        // Ink annotations are attached to the live pages only for the length of this call, so the
+        // PDF is serialised once, with no intermediate copy. Nothing renders in between.
+        var attached: [(PDFPage, PDFAnnotation)] = []
         for index in 0..<pdf.pageCount {
             guard let page = pdf.page(at: index),
-                  let drawing = drawings[ObjectIdentifier(page)], !drawing.strokes.isEmpty,
-                  let target = output.page(at: index) else { continue }
-            target.addAnnotation(InkAnnotation(drawing: drawing, pageBounds: target.bounds(for: .cropBox)))
+                  let drawing = drawings[ObjectIdentifier(page)], !drawing.strokes.isEmpty else { continue }
+            let annotation = InkAnnotation(drawing: drawing, pageBounds: page.bounds(for: .cropBox))
+            page.addAnnotation(annotation)
+            attached.append((page, annotation))
         }
-        guard let data = output.dataRepresentation() else { throw DocumentError.unwritable }
+        defer { for (page, annotation) in attached { page.removeAnnotation(annotation) } }
+
+        guard let data = pdf.dataRepresentation() else { throw DocumentError.unwritable }
         return data
     }
 
@@ -68,65 +88,245 @@ final class NoteDocument: UIDocument {
         drawings[ObjectIdentifier(page)] = drawing
         updateChangeCount(.done)
     }
+}
 
-    func insert(_ page: PDFPage, at index: Int) {
-        pdf.insert(page, at: index)
-        updateChangeCount(.done)
+/// Structural edits. Main-thread only (UIDocument itself isn't, but its undo manager and every
+/// caller here are).
+@MainActor
+extension NoteDocument {
+    // MARK: Pages
+
+    func index(of page: PDFPage) -> Int? {
+        let index = pdf.index(for: page)
+        return index == NSNotFound ? nil : index
     }
 
-    func remove(_ page: PDFPage) {
-        let index = pdf.index(for: page)
-        guard index != NSNotFound else { return }
-        drawings[ObjectIdentifier(page)] = nil
+    func insert(_ page: PDFPage, at index: Int, drawing: PKDrawing? = nil, actionName: String = "Add Page") {
+        let index = max(0, min(index, pdf.pageCount))
+        // Store the ink first: PDFView asks for the new page's canvas during `insert`.
+        if let drawing { drawings[ObjectIdentifier(page)] = drawing }
+        pdf.insert(page, at: index)
+        undoManager.registerUndo(withTarget: self) { document in
+            document.remove(page, actionName: actionName)
+        }
+        undoManager.setActionName(actionName)
+        onPagesChanged?()
+    }
+
+    func remove(_ page: PDFPage, actionName: String = "Delete Page") {
+        guard let index = index(of: page), pdf.pageCount > 1 else { return }
+        let drawing = drawings.removeValue(forKey: ObjectIdentifier(page))
         pdf.removePage(at: index)
-        updateChangeCount(.done)
+        undoManager.registerUndo(withTarget: self) { document in
+            document.insert(page, at: index, drawing: drawing, actionName: actionName)
+        }
+        undoManager.setActionName(actionName)
+        onPagesChanged?()
+    }
+
+    func movePage(from source: Int, to destination: Int) {
+        guard source != destination, (0..<pdf.pageCount).contains(source),
+              (0..<pdf.pageCount).contains(destination), let page = pdf.page(at: source) else { return }
+        pdf.removePage(at: source)
+        pdf.insert(page, at: destination)
+        undoManager.registerUndo(withTarget: self) { document in
+            document.movePage(from: destination, to: source)
+        }
+        undoManager.setActionName("Move Page")
+        onPagesChanged?()
+    }
+
+    /// Inserts a copy of `page` (content, text boxes, images and ink) right after it.
+    @discardableResult
+    func duplicate(_ page: PDFPage) -> PDFPage? {
+        guard let index = index(of: page), let copy = page.copy() as? PDFPage else { return nil }
+        // Give the copy its own annotation objects so editing one page never moves the other's.
+        for annotation in copy.annotations { copy.removeAnnotation(annotation) }
+        for annotation in page.annotations {
+            if let image = annotation as? ImageAnnotation {
+                copy.addAnnotation(image.duplicate(offsetBy: .zero))
+            } else if let clone = annotation.copy() as? PDFAnnotation {
+                copy.addAnnotation(clone)
+            }
+        }
+        insert(copy, at: index + 1, drawing: drawings[ObjectIdentifier(page)], actionName: "Duplicate Page")
+        return copy
+    }
+
+    // MARK: Bookmarks
+
+    struct Bookmark {
+        let label: String
+        let page: PDFPage
+        let depth: Int
+        let outline: PDFOutline
+    }
+
+    /// Every outline entry that points at a page in this document, in outline order.
+    var bookmarks: [Bookmark] {
+        guard let root = pdf.outlineRoot else { return [] }
+        var result: [Bookmark] = []
+        func walk(_ node: PDFOutline, depth: Int) {
+            for i in 0..<node.numberOfChildren {
+                guard let child = node.child(at: i) else { continue }
+                if let page = child.destination?.page, index(of: page) != nil {
+                    result.append(Bookmark(label: child.label ?? "Untitled", page: page, depth: depth, outline: child))
+                }
+                walk(child, depth: depth + 1)
+            }
+        }
+        walk(root, depth: 0)
+        return result
+    }
+
+    func bookmark(for page: PDFPage) -> PDFOutline? {
+        bookmarks.first { $0.page === page }?.outline
+    }
+
+    func addBookmark(for page: PDFPage, label: String) {
+        let root = pdf.outlineRoot ?? {
+            let root = PDFOutline()
+            pdf.outlineRoot = root
+            return root
+        }()
+        let item = PDFOutline()
+        item.label = label
+        item.destination = PDFDestination(page: page, at: CGPoint(x: 0, y: page.bounds(for: .cropBox).maxY))
+        // Keep top-level bookmarks in page order.
+        let pageIndex = index(of: page) ?? 0
+        var position = root.numberOfChildren
+        for i in 0..<root.numberOfChildren {
+            if let other = root.child(at: i)?.destination?.page, let otherIndex = index(of: other), otherIndex > pageIndex {
+                position = i
+                break
+            }
+        }
+        root.insertChild(item, at: position)
+        undoManager.registerUndo(withTarget: self) { document in document.removeBookmark(item) }
+        undoManager.setActionName("Add Bookmark")
+        onBookmarksChanged?()
+    }
+
+    func removeBookmark(_ item: PDFOutline) {
+        guard let parent = item.parent else { return }
+        let position = item.index
+        let page = item.destination?.page
+        let label = item.label ?? "Untitled"
+        item.removeFromParent()
+        undoManager.registerUndo(withTarget: self) { document in
+            if let page { document.restoreBookmark(item, label: label, page: page, in: parent, at: position) }
+        }
+        undoManager.setActionName("Remove Bookmark")
+        onBookmarksChanged?()
+    }
+
+    private func restoreBookmark(_ item: PDFOutline, label: String, page: PDFPage, in parent: PDFOutline, at position: Int) {
+        parent.insertChild(item, at: min(position, parent.numberOfChildren))
+        undoManager.registerUndo(withTarget: self) { document in document.removeBookmark(item) }
+        undoManager.setActionName("Add Bookmark")
+        onBookmarksChanged?()
+    }
+
+    // MARK: Text boxes and images
+
+    func addAnnotation(_ annotation: PDFAnnotation, to page: PDFPage, actionName: String) {
+        page.addAnnotation(annotation)
+        undoManager.registerUndo(withTarget: self) { document in
+            document.removeAnnotation(annotation, from: page, actionName: actionName)
+        }
+        undoManager.setActionName(actionName)
+        onAnnotationsChanged?(page)
+    }
+
+    func removeAnnotation(_ annotation: PDFAnnotation, from page: PDFPage, actionName: String) {
+        page.removeAnnotation(annotation)
+        undoManager.registerUndo(withTarget: self) { document in
+            document.addAnnotation(annotation, to: page, actionName: actionName)
+        }
+        undoManager.setActionName(actionName)
+        onAnnotationsChanged?(page)
+    }
+
+    func setBounds(_ bounds: CGRect, of annotation: PDFAnnotation, on page: PDFPage, actionName: String) {
+        let old = annotation.bounds
+        guard old != bounds else { return }
+        annotation.bounds = bounds
+        undoManager.registerUndo(withTarget: self) { document in
+            document.setBounds(old, of: annotation, on: page, actionName: actionName)
+        }
+        undoManager.setActionName(actionName)
+        onAnnotationsChanged?(page)
+    }
+
+    func setText(_ text: String, bounds: CGRect, of annotation: PDFAnnotation, on page: PDFPage) {
+        let oldText = annotation.contents ?? ""
+        let oldBounds = annotation.bounds
+        guard oldText != text || oldBounds != bounds else { return }
+        annotation.contents = text
+        annotation.bounds = bounds
+        undoManager.registerUndo(withTarget: self) { document in
+            document.setText(oldText, bounds: oldBounds, of: annotation, on: page)
+        }
+        undoManager.setActionName("Edit Text")
+        onAnnotationsChanged?(page)
+    }
+
+    func setFontSize(_ size: CGFloat, of annotation: PDFAnnotation, on page: PDFPage) {
+        let oldFont = annotation.font ?? TextBox.font(size: TextBox.defaultFontSize)
+        guard oldFont.pointSize != size else { return }
+        annotation.font = oldFont.withSize(size)
+        undoManager.registerUndo(withTarget: self) { document in
+            document.setFontSize(oldFont.pointSize, of: annotation, on: page)
+        }
+        undoManager.setActionName("Text Size")
+        onAnnotationsChanged?(page)
+    }
+
+    // MARK: Templates
+
+    /// A single-page PDF of `page` with its handwriting flattened in: what "Save as Template" stores.
+    func flattenedTemplateData(for page: PDFPage) -> Data {
+        let crop = page.bounds(for: .cropBox)
+        let drawing = drawings[ObjectIdentifier(page)]
+        return UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: crop.size)).pdfData { context in
+            context.beginPage()
+            let cg = context.cgContext
+            cg.saveGState()
+            // The renderer is top-left/y-down; PDFPage.draw expects PDF space (bottom-left/y-up).
+            cg.translateBy(x: -crop.minX, y: crop.height + crop.minY)
+            cg.scaleBy(x: 1, y: -1)
+            page.draw(with: .cropBox, to: cg)
+            cg.restoreGState()
+            if let drawing { InkRenderer.draw(drawing, in: cg) }
+        }
     }
 }
 
-/// A full-page stamp annotation that renders a page's ink and carries its PencilKit data.
-nonisolated final class InkAnnotation: PDFAnnotation {
-    static let dataKey = PDFAnnotationKey(rawValue: "/NoteGuardInk")
-    /// Key used before the app was renamed; still read so older notebooks keep editable ink.
-    private static let legacyDataKey = PDFAnnotationKey(rawValue: "/NoteShieldInk")
-    /// Rasterisation scale for the appearance other apps display (4× ≈ 288 dpi).
-    private static let renderScale: CGFloat = 4
+/// Defaults for new text boxes.
+enum TextBox {
+    static let defaultFontSize: CGFloat = 18
+    static let fontSizes: [CGFloat] = [12, 14, 18, 24, 32, 44]
 
-    private let image: CGImage?
-    private let inkBounds: CGRect
-
-    init(drawing: PKDrawing, pageBounds: CGRect) {
-        inkBounds = drawing.bounds
-        var rendered: UIImage?
-        // Render in light mode so dark-mode colour inversion never leaks into the file.
-        UITraitCollection(userInterfaceStyle: .light).performAsCurrent {
-            rendered = drawing.image(from: drawing.bounds, scale: Self.renderScale)
-        }
-        image = rendered?.cgImage
-        super.init(bounds: pageBounds, forType: .stamp, withProperties: nil)
-        setValue(drawing.dataRepresentation().base64EncodedString(), forAnnotationKey: Self.dataKey)
+    /// Helvetica is one of the PDF standard fonts, so every viewer renders it the same. (The iOS
+    /// system font has no PDF name; PDFKit would fall back to Times.)
+    static func font(size: CGFloat) -> UIFont {
+        UIFont(name: "Helvetica", size: size) ?? .systemFont(ofSize: size)
     }
 
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
-    /// Called by PDFKit to build the appearance stream when the document is written out.
-    override func draw(with box: PDFDisplayBox, in context: CGContext) {
-        guard let image, !inkBounds.isEmpty else { return }
-        // Ink space has a top-left origin with y down; PDF space is bottom-left with y up.
-        let rect = CGRect(x: bounds.minX + inkBounds.minX,
-                          y: bounds.maxY - inkBounds.maxY,
-                          width: inkBounds.width,
-                          height: inkBounds.height)
-        context.saveGState()
-        context.interpolationQuality = .high
-        context.draw(image, in: rect)
-        context.restoreGState()
+    static func make(bounds: CGRect) -> PDFAnnotation {
+        let annotation = PDFAnnotation(bounds: bounds, forType: .freeText, withProperties: nil)
+        annotation.contents = ""
+        annotation.font = font(size: defaultFontSize)
+        annotation.fontColor = .black
+        annotation.color = .clear
+        let border = PDFBorder()
+        border.lineWidth = 0
+        annotation.border = border
+        return annotation
     }
 
-    static func drawing(from annotation: PDFAnnotation) -> PKDrawing? {
-        let value = annotation.value(forAnnotationKey: dataKey) ?? annotation.value(forAnnotationKey: legacyDataKey)
-        guard let encoded = value as? String,
-              let data = Data(base64Encoded: encoded) else { return nil }
-        return try? PKDrawing(data: data)
+    static func isTextBox(_ annotation: PDFAnnotation) -> Bool {
+        let type = annotation.type ?? ""
+        return type == "FreeText" || type == PDFAnnotationSubtype.freeText.rawValue
     }
 }

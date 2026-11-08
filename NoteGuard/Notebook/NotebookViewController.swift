@@ -2,24 +2,34 @@ import UIKit
 import SwiftUI
 import PDFKit
 import PencilKit
+import PhotosUI
+import UniformTypeIdentifiers
 import Combine
 import os
+
+enum InteractionMode {
+    /// Fingers and stylus draw with the palette's tool; two fingers scroll.
+    case draw
+    /// Tap, move, resize and edit text boxes and images; two fingers scroll.
+    case select
+    /// One finger scrolls.
+    case scroll
+}
 
 /// Observable state for the notebook's top bar.
 final class NotebookChrome: ObservableObject {
     @Published var title: String
-    /// One-finger scrolling instead of drawing.
-    @Published var isScrollMode = false
+    @Published var mode: InteractionMode = .draw
     @Published var isPaletteVisible = true
+    @Published var isSidebarVisible = false
+    @Published var isCurrentPageBookmarked = false
+    @Published var customTemplates: [CustomTemplate] = []
 
     init(title: String) { self.title = title }
 }
 
-/// Shows an open PDF with a PencilKit canvas over each page and the system tool palette
-/// (the same one Markup in the Files app uses — drag it to any edge or let it float).
-///
-/// Any touch draws (a capacitive stylus is indistinguishable from a finger), so scrolling and
-/// zooming use two fingers. The hand button switches to one-finger scrolling.
+/// Shows an open PDF with a PencilKit canvas over each page, the system tool palette (the same
+/// one Markup in the Files app uses), the page sidebar and the Select tool.
 final class NotebookViewController: UIViewController {
     typealias Renamer = (_ url: URL, _ newName: String, _ completion: @escaping (Result<URL, Error>) -> Void) -> Void
 
@@ -28,7 +38,8 @@ final class NotebookViewController: UIViewController {
     private let onClosed: () -> Void
     private let chrome: NotebookChrome
     private let pdfView = PDFView()
-    private let thumbnails = PDFThumbnailView()
+    private lazy var sidebar = PageSidebar(document: document)
+    private lazy var objectEditor = ObjectEditor(pdfView: pdfView, document: document)
     private let toolPicker = PKToolPicker()
     private var toolbarHost: UIHostingController<NotebookToolbar>?
     /// Canvases (and their shape helpers) for the pages PDFKit currently has on screen.
@@ -50,7 +61,7 @@ final class NotebookViewController: UIViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    /// One undo stack for every page; PencilKit and the palette's undo buttons use the responder chain.
+    /// One undo stack for every page and object; PencilKit and the palette use the responder chain.
     override var undoManager: UndoManager? { document.undoManager }
 
     /// The palette is shown for this controller, so it stays up whichever page is under your pen.
@@ -70,14 +81,13 @@ final class NotebookViewController: UIViewController {
         pdfView.backgroundColor = .secondarySystemBackground
         pdfView.document = document.pdf
 
-        thumbnails.pdfView = pdfView
-        thumbnails.layoutMode = .vertical
-        thumbnails.thumbnailSize = CGSize(width: 64, height: 90)
-        thumbnails.backgroundColor = .systemBackground
-        thumbnails.isHidden = true
-        thumbnails.widthAnchor.constraint(equalToConstant: 96).isActive = true
+        sidebar.isHidden = true
+        sidebar.onSelect = { [weak self] page in self?.pdfView.go(to: page) }
+        sidebar.onMove = { [weak self] from, to in self?.document.movePage(from: from, to: to) }
+        sidebar.menuProvider = { [weak self] page in self?.pageMenu(for: page) ?? UIMenu() }
+        sidebar.onRemoveBookmark = { [weak self] outline in self?.document.removeBookmark(outline) }
 
-        let content = UIStackView(arrangedSubviews: [pdfView, thumbnails])
+        let content = UIStackView(arrangedSubviews: [pdfView, sidebar])
         content.axis = .horizontal
         content.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(content)
@@ -110,19 +120,40 @@ final class NotebookViewController: UIViewController {
         toolPicker.colorUserInterfaceStyle = .light   // pages are white, so keep ink colours true
         toolPicker.addObserver(self)
 
-        // @Published emits before the value changes, so use the emitted value directly.
-        chrome.$isScrollMode
-            .sink { [weak self] scrolling in self?.applyInteractionMode(scrolling: scrolling) }
+        objectEditor.onTextEditingChanged = { [weak self] editing in
+            guard let self, !editing else { return }
+            showPalette(chrome.isPaletteVisible)
+        }
+
+        document.onPagesChanged = { [weak self] in self?.pagesDidChange() }
+        document.onBookmarksChanged = { [weak self] in
+            self?.sidebar.reloadBookmarks()
+            self?.sidebar.reloadPages()
+            self?.updatePageState()
+        }
+        document.onAnnotationsChanged = { [weak self] page in self?.sidebar.invalidateThumbnail(for: page) }
+
+        NotificationCenter.default.publisher(for: .PDFViewPageChanged, object: pdfView)
+            .sink { [weak self] _ in self?.updatePageState() }
             .store(in: &cancellables)
+
+        // @Published emits before the value changes, so use the emitted value directly.
+        chrome.$mode
+            .sink { [weak self] mode in self?.applyMode(mode) }
+            .store(in: &cancellables)
+
+        chrome.customTemplates = TemplateLibrary.shared.all()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        objectEditor.follow(scrollView: documentScrollView)
         showPalette(chrome.isPaletteVisible)
-        applyInteractionMode(scrolling: chrome.isScrollMode)
+        applyMode(chrome.mode)
+        updatePageState()
     }
 
-    // MARK: Tools
+    // MARK: Modes and tools
 
     private var currentTool: PKTool {
         toolPicker.selectedToolItem.tool ?? PKInkingTool(.pen, color: .black, width: 3)
@@ -144,10 +175,11 @@ final class NotebookViewController: UIViewController {
         return find(in: pdfView)
     }
 
-    private func applyInteractionMode(scrolling: Bool) {
-        for canvas in canvases.values { canvas.isUserInteractionEnabled = !scrolling }
-        // Drawing mode: one finger draws, two scroll. Scroll mode: one finger scrolls.
-        documentScrollView?.panGestureRecognizer.minimumNumberOfTouches = scrolling ? 1 : 2
+    private func applyMode(_ mode: InteractionMode) {
+        for canvas in canvases.values { canvas.isUserInteractionEnabled = mode == .draw }
+        // Drawing and selecting: one finger acts, two scroll. Scroll mode: one finger scrolls.
+        documentScrollView?.panGestureRecognizer.minimumNumberOfTouches = mode == .scroll ? 1 : 2
+        objectEditor.isActive = mode == .select
     }
 
     // MARK: Actions
@@ -165,9 +197,32 @@ final class NotebookViewController: UIViewController {
                 chrome.isPaletteVisible.toggle()
                 showPalette(chrome.isPaletteVisible)
             },
-            addPage: { [weak self] template in self?.addPage(template) },
-            deletePage: { [weak self] in self?.confirmDeletePage() },
-            toggleThumbnails: { [weak self] in self?.toggleThumbnails() },
+            insertTextBox: { [weak self] in
+                guard let self else { return }
+                chrome.mode = .select
+                objectEditor.insertTextBox()
+            },
+            insertPhoto: { [weak self] in self?.pickPhoto() },
+            insertImageFile: { [weak self] in self?.pickImageFile() },
+            addPage: { [weak self] source in self?.addPage(source) },
+            duplicatePage: { [weak self] in
+                guard let self, let page = pdfView.currentPage else { return }
+                duplicate(page)
+            },
+            toggleBookmark: { [weak self] in
+                guard let self, let page = pdfView.currentPage else { return }
+                toggleBookmark(page)
+            },
+            saveTemplate: { [weak self] in
+                guard let self, let page = pdfView.currentPage else { return }
+                saveAsTemplate(page)
+            },
+            deleteTemplate: { [weak self] template in self?.confirmDeleteTemplate(template) },
+            deletePage: { [weak self] in
+                guard let self, let page = pdfView.currentPage else { return }
+                confirmDelete(page)
+            },
+            toggleSidebar: { [weak self] in self?.toggleSidebar() },
             editZones: { [weak self] in
                 if let self { ZoneEditorPresenter.present(from: self) }
             }
@@ -181,23 +236,33 @@ final class NotebookViewController: UIViewController {
         return CGRect(x: frame.minX + 40, y: frame.minY, width: 200, height: frame.height)
     }
 
-    private func promptRename() {
-        let alert = UIAlertController(title: "Rename notebook", message: nil, preferredStyle: .alert)
-        alert.addTextField { [chrome] field in
-            field.text = chrome.title
+    private func promptText(title: String, message: String? = nil, initial: String, action: String,
+                            completion: @escaping (String) -> Void) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addTextField { field in
+            field.text = initial
             field.clearButtonMode = .whileEditing
             field.autocapitalizationType = .sentences
             field.returnKeyType = .done
         }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in self?.showPalette(self?.chrome.isPaletteVisible ?? true) })
-        alert.addAction(UIAlertAction(title: "Rename", style: .default) { [weak self, weak alert] _ in
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
             guard let self else { return }
             showPalette(chrome.isPaletteVisible)
-            let name = alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            guard !name.isEmpty, name != chrome.title else { return }
-            performRename(to: name)
+        })
+        alert.addAction(UIAlertAction(title: action, style: .default) { [weak self, weak alert] _ in
+            guard let self else { return }
+            showPalette(chrome.isPaletteVisible)
+            let text = alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !text.isEmpty { completion(text) }
         })
         present(alert, animated: true)
+    }
+
+    private func promptRename() {
+        promptText(title: "Rename notebook", initial: chrome.title, action: "Rename") { [weak self] name in
+            guard let self, name != chrome.title else { return }
+            performRename(to: name)
+        }
     }
 
     private func performRename(to name: String) {
@@ -248,45 +313,134 @@ final class NotebookViewController: UIViewController {
         present(alert, animated: true)
     }
 
+    // MARK: Images
+
+    private func pickPhoto() {
+        var configuration = PHPickerConfiguration()
+        configuration.filter = .images
+        configuration.selectionLimit = 1
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
+    private func pickImageFile() {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.image], asCopy: true)
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
+    private func insert(_ image: UIImage) {
+        chrome.mode = .select
+        objectEditor.insertImage(image)
+        showPalette(chrome.isPaletteVisible)
+    }
+
     // MARK: Pages
 
     private var currentPageIndex: Int {
-        guard let page = pdfView.currentPage else { return max(document.pdf.pageCount - 1, 0) }
-        return document.pdf.index(for: page)
-    }
-
-    private func addPage(_ template: PageTemplate) {
-        let size = pdfView.currentPage?.bounds(for: .cropBox).size ?? PageTemplate.a4
-        guard let page = template.makePage(size: size) else { return }
-        let index = min(currentPageIndex + 1, document.pdf.pageCount)
-        document.insert(page, at: index)
-        pdfView.layoutDocumentView()
-        if let inserted = document.pdf.page(at: index) { pdfView.go(to: inserted) }
-    }
-
-    private func confirmDeletePage() {
-        guard document.pdf.pageCount > 1, let page = pdfView.currentPage else {
-            showAlert("Can't delete the only page", message: nil)
-            return
+        guard let page = pdfView.currentPage, let index = document.index(of: page) else {
+            return max(document.pdf.pageCount - 1, 0)
         }
-        let number = document.pdf.index(for: page) + 1
-        let alert = UIAlertController(title: "Delete page \(number)?",
-                                      message: "The page and its handwriting are removed from the PDF when it saves.",
-                                      preferredStyle: .alert)
+        return index
+    }
+
+    private func addPage(_ source: PageSource) {
+        let size = pdfView.currentPage?.bounds(for: .cropBox).size ?? PageTemplate.a4
+        guard let page = source.makePage(size: size) else { return }
+        document.insert(page, at: currentPageIndex + 1)
+        pdfView.go(to: page)
+    }
+
+    private func duplicate(_ page: PDFPage) {
+        if let copy = document.duplicate(page) { pdfView.go(to: copy) }
+    }
+
+    private func toggleBookmark(_ page: PDFPage) {
+        if let existing = document.bookmark(for: page) {
+            document.removeBookmark(existing)
+        } else {
+            let number = (document.index(of: page) ?? 0) + 1
+            promptText(title: "Bookmark page \(number)", initial: "Page \(number)", action: "Add") { [weak self] label in
+                self?.document.addBookmark(for: page, label: label)
+            }
+        }
+    }
+
+    private func saveAsTemplate(_ page: PDFPage) {
+        promptText(title: "Save as template",
+                   message: "The page, including its handwriting, becomes a template for new pages and notebooks.",
+                   initial: "My Template", action: "Save") { [weak self] name in
+            guard let self else { return }
+            do {
+                try TemplateLibrary.shared.save(document.flattenedTemplateData(for: page), named: name)
+                chrome.customTemplates = TemplateLibrary.shared.all()
+            } catch {
+                showAlert("Couldn't save the template", message: error.localizedDescription)
+            }
+        }
+    }
+
+    private func confirmDeleteTemplate(_ template: CustomTemplate) {
+        let alert = UIAlertController(title: "Delete “\(template.name)”?",
+                                      message: "Pages already made from it aren't affected.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-            guard let self else { return }
-            let key = ObjectIdentifier(page)
-            if let canvas = canvases.removeValue(forKey: key) { toolPicker.removeObserver(canvas) }
-            shapeAssists[key] = nil
-            document.remove(page)
-            pdfView.layoutDocumentView()
+            try? TemplateLibrary.shared.delete(template)
+            self?.chrome.customTemplates = TemplateLibrary.shared.all()
         })
         present(alert, animated: true)
     }
 
-    private func toggleThumbnails() {
-        UIView.animate(withDuration: 0.25) { self.thumbnails.isHidden.toggle() }
+    private func confirmDelete(_ page: PDFPage) {
+        guard document.pdf.pageCount > 1 else {
+            showAlert("Can't delete the only page", message: nil)
+            return
+        }
+        let number = (document.index(of: page) ?? 0) + 1
+        let alert = UIAlertController(title: "Delete page \(number)?", message: "You can undo this.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.document.remove(page)
+        })
+        present(alert, animated: true)
+    }
+
+    /// The long-press menu for a page in the sidebar.
+    private func pageMenu(for page: PDFPage) -> UIMenu {
+        let bookmarked = document.bookmark(for: page) != nil
+        return UIMenu(children: [
+            UIAction(title: "Duplicate", image: UIImage(systemName: "plus.square.on.square")) { [weak self] _ in
+                self?.duplicate(page)
+            },
+            UIAction(title: bookmarked ? "Remove Bookmark" : "Bookmark",
+                     image: UIImage(systemName: bookmarked ? "bookmark.slash" : "bookmark")) { [weak self] _ in
+                self?.toggleBookmark(page)
+            },
+            UIAction(title: "Save as Template…", image: UIImage(systemName: "square.and.arrow.down")) { [weak self] _ in
+                self?.saveAsTemplate(page)
+            },
+            UIAction(title: "Delete…", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] _ in
+                self?.confirmDelete(page)
+            },
+        ])
+    }
+
+    private func toggleSidebar() {
+        chrome.isSidebarVisible.toggle()
+        UIView.animate(withDuration: 0.25) { self.sidebar.isHidden = !self.chrome.isSidebarVisible }
+    }
+
+    private func pagesDidChange() {
+        pdfView.layoutDocumentView()
+        sidebar.reloadPages()
+        updatePageState()
+    }
+
+    private func updatePageState() {
+        let page = pdfView.currentPage
+        chrome.isCurrentPageBookmarked = page.flatMap { document.bookmark(for: $0) } != nil
+        sidebar.currentPage = page
     }
 
     // MARK: Closing
@@ -294,6 +448,7 @@ final class NotebookViewController: UIViewController {
     func close(completion: (() -> Void)? = nil) {
         guard !isClosing else { return }
         isClosing = true
+        objectEditor.endEditing()
         toolPicker.setVisible(false, forFirstResponder: self)
         Task { [weak self] in
             guard let self else { return }
@@ -316,7 +471,7 @@ extension NotebookViewController: PKToolPickerObserver {
 
     func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
         // Picking a tool means you want to draw.
-        if chrome.isScrollMode { chrome.isScrollMode = false }
+        if chrome.mode != .draw { chrome.mode = .draw }
     }
 }
 
@@ -336,7 +491,7 @@ extension NotebookViewController: PDFPageOverlayViewProvider {
         canvas.drawing = document.drawings[key] ?? PKDrawing()
         canvas.tool = currentTool
         canvas.isRulerActive = toolPicker.isRulerActive
-        canvas.isUserInteractionEnabled = !chrome.isScrollMode
+        canvas.isUserInteractionEnabled = chrome.mode == .draw
         canvas.delegate = self // after loading the drawing, so opening doesn't mark the file edited
         toolPicker.addObserver(canvas) // follows the palette's tool and ruler
         canvases[key] = canvas
@@ -358,6 +513,35 @@ extension NotebookViewController: PKCanvasViewDelegate {
         if shapeAssists[key]?.drawingDidChange() == true { return }
         guard let page = document.pdf.page(withKey: key) else { return }
         document.setDrawing(canvasView.drawing, for: page)
+        sidebar.invalidateThumbnail(for: page)
+    }
+}
+
+// MARK: - Image pickers
+
+extension NotebookViewController: PHPickerViewControllerDelegate, UIDocumentPickerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else {
+            showPalette(chrome.isPaletteVisible)
+            return
+        }
+        provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+            guard let image = object as? UIImage else { return }
+            DispatchQueue.main.async { self?.insert(image) }
+        }
+    }
+
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first, let image = UIImage(contentsOfFile: url.path) else {
+            showPalette(chrome.isPaletteVisible)
+            return
+        }
+        insert(image)
+    }
+
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        showPalette(chrome.isPaletteVisible)
     }
 }
 

@@ -2,13 +2,22 @@ import UIKit
 import PencilKit
 
 /// A clean shape inferred from a rough hand-drawn stroke.
-enum RecognizedShape {
+enum RecognizedShape: Equatable, CustomStringConvertible {
     case line(CGPoint, CGPoint)
     /// Open path of straight segments (e.g. an angle or zig-zag).
     case polyline([CGPoint])
     /// Closed polygon: triangle, rectangle, quadrilateral, pentagon…
     case polygon([CGPoint])
     case ellipse(CGRect)
+
+    var description: String {
+        switch self {
+        case let .line(a, b): "line(\(a), \(b))"
+        case let .polyline(points): "polyline(\(points.count) points)"
+        case let .polygon(points): "polygon(\(points.count) corners)"
+        case let .ellipse(rect): "ellipse(\(rect))"
+        }
+    }
 
     /// Outline for previews.
     var path: UIBezierPath {

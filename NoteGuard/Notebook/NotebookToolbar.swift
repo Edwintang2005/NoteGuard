@@ -8,13 +8,20 @@ struct NotebookActions {
     var share: () -> Void
     var print: () -> Void
     var togglePalette: () -> Void
-    var addPage: (PageTemplate) -> Void
+    var insertTextBox: () -> Void
+    var insertPhoto: () -> Void
+    var insertImageFile: () -> Void
+    var addPage: (PageSource) -> Void
+    var duplicatePage: () -> Void
+    var toggleBookmark: () -> Void
+    var saveTemplate: () -> Void
+    var deleteTemplate: (CustomTemplate) -> Void
     var deletePage: () -> Void
-    var toggleThumbnails: () -> Void
+    var toggleSidebar: () -> Void
     var editZones: () -> Void
 }
 
-/// Document bar: title menu, scroll/palette toggles, undo/redo, pages, thumbnails and the shield.
+/// Document bar: title menu, interaction modes, insert, undo/redo, pages, sidebar and the shield.
 /// The drawing tools themselves live in the system palette, which you can move anywhere.
 struct NotebookToolbar: View {
     @ObservedObject var chrome: NotebookChrome
@@ -49,42 +56,87 @@ struct NotebookToolbar: View {
 
             Divider().frame(height: 24)
 
-            Button {
-                chrome.isScrollMode.toggle()
-            } label: {
-                Image(systemName: chrome.isScrollMode ? "hand.raised.fill" : "hand.raised")
-            }
-            .accessibilityLabel(chrome.isScrollMode ? "Scroll mode on" : "Scroll mode off")
+            modeButton(.select, symbol: "cursorarrow", label: "Select text boxes and images")
+            modeButton(.scroll, symbol: "hand.raised", label: "Scroll with one finger")
 
             Button(action: actions.togglePalette) {
                 Image(systemName: chrome.isPaletteVisible ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
             }
             .accessibilityLabel(chrome.isPaletteVisible ? "Hide tools" : "Show tools")
 
+            Menu {
+                Button("Text Box", systemImage: "character.textbox", action: actions.insertTextBox)
+                Button("Photo…", systemImage: "photo", action: actions.insertPhoto)
+                Button("Image from Files…", systemImage: "folder", action: actions.insertImageFile)
+            } label: {
+                Image(systemName: "plus.circle")
+            }
+            .accessibilityLabel("Insert")
+
             Button(action: actions.undo) { Image(systemName: "arrow.uturn.backward") }
                 .accessibilityLabel("Undo")
             Button(action: actions.redo) { Image(systemName: "arrow.uturn.forward") }
                 .accessibilityLabel("Redo")
 
-            Menu {
-                Section("Add page after this one") {
-                    ForEach(PageTemplate.allCases) { template in
-                        Button(template.title, systemImage: template.symbol) { actions.addPage(template) }
-                    }
-                }
-                Button("Delete this page…", systemImage: "trash", role: .destructive, action: actions.deletePage)
-            } label: {
-                Image(systemName: "doc.badge.plus")
-            }
-            .accessibilityLabel("Pages")
+            pagesMenu
 
-            Button(action: actions.toggleThumbnails) { Image(systemName: "sidebar.trailing") }
-                .accessibilityLabel("Page thumbnails")
+            Button(action: actions.toggleSidebar) {
+                Image(systemName: chrome.isSidebarVisible ? "sidebar.trailing" : "sidebar.trailing")
+                    .symbolVariant(chrome.isSidebarVisible ? .fill : .none)
+            }
+            .accessibilityLabel("Pages and bookmarks")
 
             ShieldMenu(store: store, onEditZones: actions.editZones)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+    }
+
+    private func modeButton(_ mode: InteractionMode, symbol: String, label: String) -> some View {
+        Button {
+            chrome.mode = chrome.mode == mode ? .draw : mode
+        } label: {
+            Image(systemName: symbol)
+                .symbolVariant(chrome.mode == mode ? .fill : .none)
+                .padding(6)
+                .background(chrome.mode == mode ? Color.accentColor.opacity(0.18) : .clear, in: .circle)
+        }
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(chrome.mode == mode ? .isSelected : [])
+    }
+
+    private var pagesMenu: some View {
+        Menu {
+            Menu("Add Page After This One", systemImage: "doc.badge.plus") {
+                ForEach(PageTemplate.allCases) { template in
+                    Button(template.title, systemImage: template.symbol) { actions.addPage(.builtIn(template)) }
+                }
+                if !chrome.customTemplates.isEmpty {
+                    Section("My Templates") {
+                        ForEach(chrome.customTemplates) { template in
+                            Button(template.name, systemImage: "doc.richtext") { actions.addPage(.custom(template)) }
+                        }
+                    }
+                }
+            }
+            Button("Duplicate This Page", systemImage: "plus.square.on.square", action: actions.duplicatePage)
+            Button(chrome.isCurrentPageBookmarked ? "Remove Bookmark" : "Bookmark This Page",
+                   systemImage: chrome.isCurrentPageBookmarked ? "bookmark.slash" : "bookmark",
+                   action: actions.toggleBookmark)
+            Button("Save Page as Template…", systemImage: "square.and.arrow.down", action: actions.saveTemplate)
+            if !chrome.customTemplates.isEmpty {
+                Menu("Delete a Template", systemImage: "trash") {
+                    ForEach(chrome.customTemplates) { template in
+                        Button(template.name, role: .destructive) { actions.deleteTemplate(template) }
+                    }
+                }
+            }
+            Divider()
+            Button("Delete This Page…", systemImage: "trash", role: .destructive, action: actions.deletePage)
+        } label: {
+            Image(systemName: "doc.on.doc")
+        }
+        .accessibilityLabel("Pages")
     }
 }
