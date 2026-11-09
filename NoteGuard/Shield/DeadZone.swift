@@ -41,11 +41,9 @@ struct DeadZoneShape: Codable, Identifiable, Equatable {
         }
     }
 
-    func contains(_ point: CGPoint, screenSize: CGSize, padding: CGFloat) -> Bool {
-        let path = fixedPath(screenSize: screenSize)
-        if path.contains(point) { return true }
-        guard padding > 0 else { return false }
-        return Self.paddingRegion(of: path, padding: padding).contains(point)
+    /// Exactly the area the user masked: no margin, so every touch outside the outline counts.
+    func contains(_ point: CGPoint, screenSize: CGSize) -> Bool {
+        fixedPath(screenSize: screenSize).contains(point)
     }
 
     /// The outline converted into another coordinate space (e.g. a view), point by point so it
@@ -74,9 +72,10 @@ struct DeadZoneShape: Codable, Identifiable, Equatable {
         return path
     }
 
-    /// A band `padding` wide around the outline (inside and out).
-    static func paddingRegion(of path: CGPath, padding: CGFloat) -> CGPath {
-        path.copy(strokingWithWidth: padding * 2, lineCap: .round, lineJoin: .round, miterLimit: 10)
+    /// A band `distance` wide either side of the outline. Only the zone editor uses it, so thin
+    /// zones are easy to grab; it never blocks touches.
+    static func outlineBand(of path: CGPath, distance: CGFloat) -> CGPath {
+        path.copy(strokingWithWidth: distance * 2, lineCap: .round, lineJoin: .round, miterLimit: 10)
     }
 
     static func normalize(_ rect: CGRect, in size: CGSize) -> CGRect {
@@ -101,8 +100,6 @@ final class DeadZoneStore: ObservableObject {
     @Published var shapes: [DeadZoneShape] = [] { didSet { save() } }
     /// Master switch for the shield.
     @Published var isEnabled = true { didSet { save() } }
-    /// Extra margin (points) added around every zone.
-    @Published var padding: Double = 8 { didSet { save() } }
     /// Tint the zones on screen and flash each touch that gets blocked.
     @Published var showsZones = true { didSet { save() } }
     /// While the zone editor is open the shield steps aside so zones can be moved and resized.
@@ -115,7 +112,8 @@ final class DeadZoneStore: ObservableObject {
     private struct Persisted: Codable {
         var shapes: [DeadZoneShape]
         var isEnabled: Bool
-        var padding: Double
+        /// Older versions blocked a margin around each zone. Still decoded, and ignored.
+        var padding: Double?
         var showsZones: Bool
     }
 
@@ -134,8 +132,7 @@ final class DeadZoneStore: ObservableObject {
 
     func blocks(fixedPoint: CGPoint, screenSize: CGSize) -> Bool {
         guard isEnabled, !isEditing else { return false }
-        let pad = CGFloat(padding)
-        return shapes.contains { $0.contains(fixedPoint, screenSize: screenSize, padding: pad) }
+        return shapes.contains { $0.contains(fixedPoint, screenSize: screenSize) }
     }
 
     func recordBlocked(at fixedPoint: CGPoint) {
@@ -159,14 +156,13 @@ final class DeadZoneStore: ObservableObject {
         isLoading = true
         shapes = saved.shapes
         isEnabled = saved.isEnabled
-        padding = saved.padding
         showsZones = saved.showsZones
         isLoading = false
     }
 
     private func save() {
         guard !isLoading else { return }
-        let snapshot = Persisted(shapes: shapes, isEnabled: isEnabled, padding: padding, showsZones: showsZones)
+        let snapshot = Persisted(shapes: shapes, isEnabled: isEnabled, showsZones: showsZones)
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults.standard.set(data, forKey: defaultsKey)
         }

@@ -9,10 +9,12 @@ cracked screen and a passive (non-Bluetooth) stylus.
   save *in place* wherever they live: iCloud Drive, On My iPad, Dropbox and so on. The app also shows
   up under "Open in…" for PDFs.
 - **New notebooks** in Blank, Lined, Grid or Dotted (A4), saved as normal PDFs.
-- **Markup tools from the Files app.** The system tool palette: pen, fineliner, highlighter, pencil,
-  crayon and more, colour picker with opacity, widths, pixel/object eraser, lasso, ruler, undo/redo.
-  Drag it to any edge or let it float; its position and tool are remembered. One finger or the stylus
-  draws; two fingers scroll and zoom; the hand button switches to one-finger scrolling.
+- **Markup tools from the Files app.** Notebooks open in scroll mode (the hand): one finger scrolls
+  and nothing gets drawn by accident. Tap the pen to open the system tool palette (pen, fineliner,
+  highlighter, pencil, crayon and more, colour picker with opacity, widths, pixel/object eraser,
+  lasso, ruler, undo/redo); while it's open one finger or the stylus draws and two fingers scroll and
+  zoom. Tap the pen again, or the hand, to close it. Drag the palette to any edge or let it float; its
+  position and tool are remembered.
 - **Draw and hold for shapes.** Pause at the end of a stroke to snap it to a line, angle, triangle,
   rectangle, polygon, circle or ellipse (preview while holding, applied on lift). Undo once to get
   the freehand stroke back.
@@ -22,7 +24,7 @@ cracked screen and a passive (non-Bluetooth) stylus.
   moves them, resizes them from the corners (images keep their shape), double-tap edits text, and
   an edit menu offers text size, duplicate and delete. Text boxes are standard PDF FreeText
   annotations in Helvetica, so every PDF reader shows them the same.
-- **Pages.** A sidebar of thumbnails that include your handwriting: tap to jump, drag to reorder,
+- **Pages.** A sidebar of thumbnails on the left that include your handwriting: tap to jump, drag to reorder,
   long-press to duplicate, bookmark, save as template or delete. Templates: Blank, Lined, Grid,
   Dotted, Cornell Notes, Music Staves, Weekly Planner, plus any page you save as your own template.
 - **Bookmarks** are the PDF's outline, so other readers list them too (and outlines that came with a
@@ -34,17 +36,20 @@ cracked screen and a passive (non-Bluetooth) stylus.
   so Files, Preview and Acrobat show it crisply at any zoom. The same annotation carries the raw
   PencilKit strokes, so reopening in NoteGuard gives back fully editable ink. No sidecar files.
   Saving is a single pass: 100 inked pages serialise in about half a second.
-- **Dead-zone shield.** Map the cracked area once with freehand outlines, rectangles or ellipses, plus
-  a padding margin. Zones are saved on the device (not synced, since a crack belongs to one iPad);
+- **Dead-zone shield.** Map the cracked area once with freehand outlines, rectangles or ellipses.
+  Exactly the masked area is ignored, with no margin around it. Zones are saved on the device (not synced, since a crack belongs to one iPad);
   setup opens automatically only on first launch, and later from the Shield menu. Any touch that *starts* inside a zone is swallowed before the app sees it. Strokes
   that start outside and drift in keep drawing.
 
 ## How the shield works
 
-A small transparent window floats above the app, sized to just the zones. Touches that land in a
+A small transparent window floats above the app, sized to the zones' bounding box. Touches that land in a
 zone go to that window and are discarded. Everything else reaches the app normally. The window has
 to stay zone-sized: a full-screen pass-through window stops the system Files browser (which runs
 in another process) from receiving touches at all.
+
+On the Files browser screen (which runs in another process) the whole bounding box of a round or
+freehand zone may ignore touches; inside notebooks only the outline itself does.
 
 Zones are stored against the physical glass (the screen's fixed, home-button-down coordinate
 space), so they stay on the crack through rotation, Split View and Stage Manager.

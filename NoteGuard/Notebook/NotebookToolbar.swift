@@ -7,7 +7,6 @@ struct NotebookActions {
     var rename: () -> Void
     var share: () -> Void
     var print: () -> Void
-    var togglePalette: () -> Void
     var insertTextBox: () -> Void
     var insertPhoto: () -> Void
     var insertImageFile: () -> Void
@@ -21,8 +20,8 @@ struct NotebookActions {
     var editZones: () -> Void
 }
 
-/// Document bar: title menu, interaction modes, insert, undo/redo, pages, sidebar and the shield.
-/// The drawing tools themselves live in the system palette, which you can move anywhere.
+/// Document bar: title menu, interaction modes (scroll, draw, select), insert, undo/redo, pages,
+/// sidebar and the shield. The pen opens the system tool palette, which you can move anywhere.
 struct NotebookToolbar: View {
     @ObservedObject var chrome: NotebookChrome
     @ObservedObject var store: DeadZoneStore
@@ -56,13 +55,9 @@ struct NotebookToolbar: View {
 
             Divider().frame(height: 24)
 
+            modeButton(.scroll, symbol: "hand.raised", label: "Scroll")
+            modeButton(.draw, symbol: "pencil.tip.crop.circle", label: "Draw and annotate")
             modeButton(.select, symbol: "cursorarrow", label: "Select text boxes and images")
-            modeButton(.scroll, symbol: "hand.raised", label: "Scroll with one finger")
-
-            Button(action: actions.togglePalette) {
-                Image(systemName: chrome.isPaletteVisible ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
-            }
-            .accessibilityLabel(chrome.isPaletteVisible ? "Hide tools" : "Show tools")
 
             Menu {
                 Button("Text Box", systemImage: "character.textbox", action: actions.insertTextBox)
@@ -81,7 +76,7 @@ struct NotebookToolbar: View {
             pagesMenu
 
             Button(action: actions.toggleSidebar) {
-                Image(systemName: chrome.isSidebarVisible ? "sidebar.trailing" : "sidebar.trailing")
+                Image(systemName: "sidebar.leading")
                     .symbolVariant(chrome.isSidebarVisible ? .fill : .none)
             }
             .accessibilityLabel("Pages and bookmarks")
@@ -93,9 +88,10 @@ struct NotebookToolbar: View {
         .glassEffect(.regular, in: .capsule)
     }
 
+    /// Tapping the active mode again (pen or select) goes back to scrolling, which closes the palette.
     private func modeButton(_ mode: InteractionMode, symbol: String, label: String) -> some View {
         Button {
-            chrome.mode = chrome.mode == mode ? .draw : mode
+            chrome.mode = chrome.mode == mode ? .scroll : mode
         } label: {
             Image(systemName: symbol)
                 .symbolVariant(chrome.mode == mode ? .fill : .none)

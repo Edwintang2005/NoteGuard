@@ -69,7 +69,8 @@ final class NoteDocument: UIDocument {
 
     override func contents(forType typeName: String) throws -> Any {
         // Ink annotations are attached to the live pages only for the length of this call, so the
-        // PDF is serialised once, with no intermediate copy. Nothing renders in between.
+        // PDF is serialised once, with no intermediate copy. PDFView may still paint the pages while
+        // they're attached; `whileWriting` keeps the ink out of those on-screen paints.
         var attached: [(PDFPage, PDFAnnotation)] = []
         for index in 0..<pdf.pageCount {
             guard let page = pdf.page(at: index),
@@ -80,7 +81,9 @@ final class NoteDocument: UIDocument {
         }
         defer { for (page, annotation) in attached { page.removeAnnotation(annotation) } }
 
-        guard let data = pdf.dataRepresentation() else { throw DocumentError.unwritable }
+        guard let data = InkAnnotation.whileWriting({ pdf.dataRepresentation() }) else {
+            throw DocumentError.unwritable
+        }
         return data
     }
 

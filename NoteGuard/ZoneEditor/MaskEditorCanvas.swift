@@ -124,7 +124,7 @@ final class MaskEditorCanvas: UIView {
         guard let space = fixedSpace else { return false }
         let path = shape.path(from: space, to: self).cgPath
         // Also accept touches just on the outline, so thin freehand zones are easy to grab.
-        return path.contains(p) || DeadZoneShape.paddingRegion(of: path, padding: 12).contains(p)
+        return path.contains(p) || DeadZoneShape.outlineBand(of: path, distance: 12).contains(p)
     }
 
     // MARK: Touches
@@ -214,16 +214,10 @@ final class MaskEditorCanvas: UIView {
         drawGrid()
         guard let space = fixedSpace else { return }
 
-        let pad = CGFloat(store.padding)
         for shape in store.shapes {
             let selected = shape.id == editor.selectedID
             let tint: UIColor = selected ? .systemBlue : .systemRed
             let body = shape.path(from: space, to: self)
-
-            if pad > 0 {
-                tint.withAlphaComponent(0.1).setFill()
-                UIBezierPath(cgPath: DeadZoneShape.paddingRegion(of: body.cgPath, padding: pad)).fill()
-            }
 
             tint.withAlphaComponent(0.25).setFill()
             body.fill()

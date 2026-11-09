@@ -33,6 +33,18 @@ struct NoteDocumentTests {
         let inkAnnotations = try #require(raw.page(at: 0)).annotations.filter { InkAnnotation.drawing(from: $0) != nil }
         #expect(inkAnnotations.count == 1)
 
+        // ...and its appearance actually shows the ink. `raw` was opened without NoteGuard's
+        // loading code, so its annotation is a plain stamp drawn from the appearance stream in the
+        // file, the way Files and Preview draw it.
+        let rawPage = try #require(raw.page(at: 0))
+        let box = rawPage.bounds(for: .cropBox)
+        let dark = darkPixelCount(size: box.size) { context in
+            context.translateBy(x: -box.minX, y: box.height + box.minY)
+            context.scaleBy(x: 1, y: -1)
+            rawPage.draw(with: .cropBox, to: context)
+        }
+        #expect(dark > 300, "the saved ink must be visible to other PDF readers (\(dark) dark pixels)")
+
         // NoteGuard gets editable strokes back, and the static copy is gone from the page.
         let reopened = try await open(url)
         let reopenedPage = try #require(reopened.pdf.page(at: 0))

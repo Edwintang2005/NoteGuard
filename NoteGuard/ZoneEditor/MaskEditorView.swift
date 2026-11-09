@@ -65,15 +65,7 @@ struct MaskEditorView: View {
                     .buttonStyle(.borderedProminent)
             }
 
-            HStack(spacing: 12) {
-                Text("Padding")
-                Slider(value: $store.padding, in: 0...40, step: 1)
-                Text("\(Int(store.padding)) pt")
-                    .monospacedDigit()
-                    .frame(width: 48, alignment: .trailing)
-            }
-
-            Text("Freehand: trace any outline around the crack. Rectangle or ellipse: drag across the area. Drag a zone to move it, or the corner handles of the selected zone to resize it. The shield is paused while you edit.")
+            Text("Freehand: trace any outline around the crack. Rectangle or ellipse: drag across the area. Drag a zone to move it, or the corner handles of the selected zone to resize it. Only touches inside a zone are ignored; everything outside its outline works normally. The shield is paused while you edit.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }

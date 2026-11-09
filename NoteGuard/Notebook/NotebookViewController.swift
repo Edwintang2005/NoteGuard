@@ -8,19 +8,18 @@ import Combine
 import os
 
 enum InteractionMode {
-    /// Fingers and stylus draw with the palette's tool; two fingers scroll.
+    /// One finger scrolls; nothing on the page reacts. Notebooks open in this mode.
+    case scroll
+    /// The tool palette is open; fingers and stylus draw with its tool; two fingers scroll.
     case draw
     /// Tap, move, resize and edit text boxes and images; two fingers scroll.
     case select
-    /// One finger scrolls.
-    case scroll
 }
 
 /// Observable state for the notebook's top bar.
 final class NotebookChrome: ObservableObject {
     @Published var title: String
-    @Published var mode: InteractionMode = .draw
-    @Published var isPaletteVisible = true
+    @Published var mode: InteractionMode = .scroll
     @Published var isSidebarVisible = false
     @Published var isCurrentPageBookmarked = false
     @Published var customTemplates: [CustomTemplate] = []
@@ -82,12 +81,14 @@ final class NotebookViewController: UIViewController {
         pdfView.document = document.pdf
 
         sidebar.isHidden = true
+        sidebar.alpha = 0
         sidebar.onSelect = { [weak self] page in self?.pdfView.go(to: page) }
         sidebar.onMove = { [weak self] from, to in self?.document.movePage(from: from, to: to) }
         sidebar.menuProvider = { [weak self] page in self?.pageMenu(for: page) ?? UIMenu() }
         sidebar.onRemoveBookmark = { [weak self] outline in self?.document.removeBookmark(outline) }
 
-        let content = UIStackView(arrangedSubviews: [pdfView, sidebar])
+        // Thumbnails on the left, like most notes apps.
+        let content = UIStackView(arrangedSubviews: [sidebar, pdfView])
         content.axis = .horizontal
         content.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(content)
@@ -121,8 +122,7 @@ final class NotebookViewController: UIViewController {
         toolPicker.addObserver(self)
 
         objectEditor.onTextEditingChanged = { [weak self] editing in
-            guard let self, !editing else { return }
-            showPalette(chrome.isPaletteVisible)
+            if !editing { self?.syncPalette() }
         }
 
         document.onPagesChanged = { [weak self] in self?.pagesDidChange() }
@@ -148,9 +148,46 @@ final class NotebookViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         objectEditor.follow(scrollView: documentScrollView)
-        showPalette(chrome.isPaletteVisible)
         applyMode(chrome.mode)
         updatePageState()
+    }
+
+    // MARK: Rotation
+
+    /// PDFView refits its pages on rotation while the ink canvases and selection layer follow a
+    /// beat later, which looks glitchy. Cover the pages with a snapshot during the turn, then refit,
+    /// return to the same spot on the same page, and fade back in.
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        guard view.window != nil else { return }
+        let anchor = readingPosition()
+        let cover = pdfView.snapshotView(afterScreenUpdates: false)
+        if let cover {
+            cover.frame = pdfView.convert(pdfView.bounds, to: view)
+            view.insertSubview(cover, aboveSubview: pdfView.superview ?? pdfView)
+        }
+        pdfView.alpha = 0
+        coordinator.animate(alongsideTransition: { _ in
+            cover?.alpha = 0
+        }, completion: { [weak self] _ in
+            guard let self else { return }
+            cover?.removeFromSuperview()
+            pdfView.autoScales = true // fit the page width to the new orientation
+            pdfView.layoutDocumentView()
+            if let anchor { pdfView.go(to: PDFDestination(page: anchor.page, at: anchor.point)) }
+            objectEditor.refresh()
+            UIView.animate(withDuration: 0.2) { self.pdfView.alpha = 1 }
+        })
+    }
+
+    /// The page and the point on it at the top-left of the screen.
+    private func readingPosition() -> (page: PDFPage, point: CGPoint)? {
+        let corner = CGPoint(x: pdfView.bounds.midX, y: pdfView.bounds.minY + 1)
+        guard let page = pdfView.page(for: corner, nearest: true) else { return nil }
+        let visible = pdfView.convert(pdfView.bounds, to: page)
+        let box = page.bounds(for: pdfView.displayBox)
+        // PDF space has y going up, so the top of the screen is the rect's maxY.
+        return (page, CGPoint(x: box.minX, y: min(visible.maxY, box.maxY)))
     }
 
     // MARK: Modes and tools
@@ -159,9 +196,17 @@ final class NotebookViewController: UIViewController {
         toolPicker.selectedToolItem.tool ?? PKInkingTool(.pen, color: .black, width: 3)
     }
 
-    private func showPalette(_ visible: Bool) {
+    /// The palette is open exactly while drawing. Call again after anything that may have taken
+    /// first responder (alerts, pickers, text editing).
+    private func syncPalette(for mode: InteractionMode? = nil) {
+        let visible = (mode ?? chrome.mode) == .draw && !isClosing
+        // Registered for the page canvases too: touching a canvas can make it first responder, and
+        // the palette must stay up (or down) whichever responder is current.
         toolPicker.setVisible(visible, forFirstResponder: self)
-        if visible { becomeFirstResponder() }
+        for canvas in canvases.values { toolPicker.setVisible(visible, forFirstResponder: canvas) }
+        if visible, !isFirstResponder, !canvases.values.contains(where: \.isFirstResponder) {
+            becomeFirstResponder()
+        }
     }
 
     private var documentScrollView: UIScrollView? {
@@ -180,6 +225,7 @@ final class NotebookViewController: UIViewController {
         // Drawing and selecting: one finger acts, two scroll. Scroll mode: one finger scrolls.
         documentScrollView?.panGestureRecognizer.minimumNumberOfTouches = mode == .scroll ? 1 : 2
         objectEditor.isActive = mode == .select
+        syncPalette(for: mode)
     }
 
     // MARK: Actions
@@ -192,11 +238,6 @@ final class NotebookViewController: UIViewController {
             rename: { [weak self] in self?.promptRename() },
             share: { [weak self] in self?.share() },
             print: { [weak self] in self?.printDocument() },
-            togglePalette: { [weak self] in
-                guard let self else { return }
-                chrome.isPaletteVisible.toggle()
-                showPalette(chrome.isPaletteVisible)
-            },
             insertTextBox: { [weak self] in
                 guard let self else { return }
                 chrome.mode = .select
@@ -246,12 +287,10 @@ final class NotebookViewController: UIViewController {
             field.returnKeyType = .done
         }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            guard let self else { return }
-            showPalette(chrome.isPaletteVisible)
+            self?.syncPalette()
         })
         alert.addAction(UIAlertAction(title: action, style: .default) { [weak self, weak alert] _ in
-            guard let self else { return }
-            showPalette(chrome.isPaletteVisible)
+            self?.syncPalette()
             let text = alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if !text.isEmpty { completion(text) }
         })
@@ -333,7 +372,7 @@ final class NotebookViewController: UIViewController {
     private func insert(_ image: UIImage) {
         chrome.mode = .select
         objectEditor.insertImage(image)
-        showPalette(chrome.isPaletteVisible)
+        syncPalette()
     }
 
     // MARK: Pages
@@ -428,7 +467,16 @@ final class NotebookViewController: UIViewController {
 
     private func toggleSidebar() {
         chrome.isSidebarVisible.toggle()
-        UIView.animate(withDuration: 0.25) { self.sidebar.isHidden = !self.chrome.isSidebarVisible }
+        let show = chrome.isSidebarVisible
+        // Settle the current layout first, so the panel animates from the left edge rather than
+        // from wherever its zero-sized frame last was.
+        view.layoutIfNeeded()
+        if show { sidebar.reloadPages() }
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .beginFromCurrentState]) {
+            self.sidebar.isHidden = !show
+            self.sidebar.alpha = show ? 1 : 0
+            self.view.layoutIfNeeded()
+        }
     }
 
     private func pagesDidChange() {
@@ -449,7 +497,7 @@ final class NotebookViewController: UIViewController {
         guard !isClosing else { return }
         isClosing = true
         objectEditor.endEditing()
-        toolPicker.setVisible(false, forFirstResponder: self)
+        syncPalette() // isClosing hides it
         Task { [weak self] in
             guard let self else { return }
             let success = await document.close()
@@ -463,16 +511,8 @@ final class NotebookViewController: UIViewController {
 // MARK: - Tool palette
 
 extension NotebookViewController: PKToolPickerObserver {
-    func toolPickerVisibilityDidChange(_ toolPicker: PKToolPicker) {
-        if chrome.isPaletteVisible != toolPicker.isVisible, !isClosing, presentedViewController == nil {
-            chrome.isPaletteVisible = toolPicker.isVisible
-        }
-    }
-
-    func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
-        // Picking a tool means you want to draw.
-        if chrome.mode != .draw { chrome.mode = .draw }
-    }
+    // The palette is only on screen in draw mode, so a tool change never needs to switch modes.
+    // (Restoring the saved tool fires this on open too, which used to start notebooks in draw mode.)
 }
 
 // MARK: - Page overlays
@@ -494,6 +534,7 @@ extension NotebookViewController: PDFPageOverlayViewProvider {
         canvas.isUserInteractionEnabled = chrome.mode == .draw
         canvas.delegate = self // after loading the drawing, so opening doesn't mark the file edited
         toolPicker.addObserver(canvas) // follows the palette's tool and ruler
+        toolPicker.setVisible(chrome.mode == .draw, forFirstResponder: canvas)
         canvases[key] = canvas
         shapeAssists[key] = ShapeAssist(canvas: canvas)
         return canvas
@@ -523,7 +564,7 @@ extension NotebookViewController: PHPickerViewControllerDelegate, UIDocumentPick
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
         guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else {
-            showPalette(chrome.isPaletteVisible)
+            syncPalette()
             return
         }
         provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
@@ -534,14 +575,14 @@ extension NotebookViewController: PHPickerViewControllerDelegate, UIDocumentPick
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         guard let url = urls.first, let image = UIImage(contentsOfFile: url.path) else {
-            showPalette(chrome.isPaletteVisible)
+            syncPalette()
             return
         }
         insert(image)
     }
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        showPalette(chrome.isPaletteVisible)
+        syncPalette()
     }
 }
 

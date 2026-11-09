@@ -7,18 +7,33 @@ import CoreGraphics
 struct DeadZoneTests {
     let screen = CGSize(width: 1000, height: 1000)
 
-    @Test func rectangleBlocksInsideAndPaddingOnly() {
+    @Test func rectangleBlocksExactlyItsArea() {
         let zone = DeadZoneShape(kind: .rectangle, normalizedRect: CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.2))
-        #expect(zone.contains(CGPoint(x: 150, y: 150), screenSize: screen, padding: 0))
-        #expect(!zone.contains(CGPoint(x: 305, y: 150), screenSize: screen, padding: 0))
-        #expect(zone.contains(CGPoint(x: 305, y: 150), screenSize: screen, padding: 8))
-        #expect(!zone.contains(CGPoint(x: 330, y: 150), screenSize: screen, padding: 8))
+        #expect(zone.contains(CGPoint(x: 150, y: 150), screenSize: screen))
+        #expect(zone.contains(CGPoint(x: 299, y: 150), screenSize: screen))
+        // One point outside the edge is a valid touch: there's no margin.
+        #expect(!zone.contains(CGPoint(x: 301, y: 150), screenSize: screen))
+        #expect(!zone.contains(CGPoint(x: 150, y: 99), screenSize: screen))
+    }
+
+    @Test func storeIgnoresTheOldPaddingSetting() throws {
+        // Older versions saved a padding margin (and blocked touches in it).
+        let defaults = UserDefaults.standard
+        let previous = defaults.data(forKey: "deadZones.v1")
+        defer { defaults.set(previous, forKey: "deadZones.v1") }
+        let json = #"{"shapes":[{"id":"6E1B0D6A-4E0B-4C3B-9A49-1E8D5A2C9F11","kind":"rectangle","normalizedRect":[[0.1,0.1],[0.2,0.2]]}],"isEnabled":true,"padding":30,"showsZones":true}"#
+        defaults.set(Data(json.utf8), forKey: "deadZones.v1")
+
+        let store = DeadZoneStore()
+        #expect(store.shapes.count == 1)
+        #expect(store.blocks(fixedPoint: CGPoint(x: 150, y: 150), screenSize: screen))
+        #expect(!store.blocks(fixedPoint: CGPoint(x: 305, y: 150), screenSize: screen))
     }
 
     @Test func ellipseExcludesItsBoundingBoxCorners() {
         let zone = DeadZoneShape(kind: .ellipse, normalizedRect: CGRect(x: 0, y: 0, width: 0.4, height: 0.4))
-        #expect(zone.contains(CGPoint(x: 200, y: 200), screenSize: screen, padding: 0))
-        #expect(!zone.contains(CGPoint(x: 10, y: 10), screenSize: screen, padding: 0))
+        #expect(zone.contains(CGPoint(x: 200, y: 200), screenSize: screen))
+        #expect(!zone.contains(CGPoint(x: 10, y: 10), screenSize: screen))
     }
 
     @Test func freehandUsesItsOutlineNotItsBox() {
@@ -27,8 +42,8 @@ struct DeadZoneTests {
                       CGPoint(x: 0.4, y: 0.3), CGPoint(x: 0.4, y: 0.4), CGPoint(x: 0.1, y: 0.4)]
         let zone = DeadZoneShape(kind: .freehand, normalizedRect: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3),
                                  normalizedPoints: points)
-        #expect(zone.contains(CGPoint(x: 150, y: 350), screenSize: screen, padding: 0))
-        #expect(!zone.contains(CGPoint(x: 350, y: 150), screenSize: screen, padding: 0))
+        #expect(zone.contains(CGPoint(x: 150, y: 350), screenSize: screen))
+        #expect(!zone.contains(CGPoint(x: 350, y: 150), screenSize: screen))
     }
 
     @Test func zonesSavedBeforeFreehandExistedStillDecode() throws {

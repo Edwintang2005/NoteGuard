@@ -22,8 +22,28 @@ nonisolated final class InkAnnotation: PDFAnnotation {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    private static let writingKey = "NoteGuard.writingInk"
+
+    /// Runs `body` (a `PDFDocument.dataRepresentation()` call) with ink painting switched on for this
+    /// thread only.
+    ///
+    /// PDFKit calls `draw` both to build the appearance stream that gets written to the file and to
+    /// paint pages on screen. On screen the page's live canvas already shows the ink, and PDFView can
+    /// keep a painted copy of a page after this annotation is removed again, which leaves a ghost
+    /// of the old ink under the canvas (lasso moves look like copies, erasing looks like it fails).
+    /// So the annotation paints only inside this call, and only on the thread writing the file.
+    static func whileWriting<T>(_ body: () throws -> T) rethrows -> T {
+        let thread = Thread.current
+        thread.threadDictionary[writingKey] = true
+        defer { thread.threadDictionary.removeObject(forKey: writingKey) }
+        return try body()
+    }
+
+    private static var isWriting: Bool { Thread.current.threadDictionary[writingKey] as? Bool == true }
+
     /// Called by PDFKit to build the appearance stream when the document is written out.
     override func draw(with box: PDFDisplayBox, in context: CGContext) {
+        guard Self.isWriting else { return }
         context.saveGState()
         // Ink space has a top-left origin with y down; PDF space is bottom-left with y up.
         context.translateBy(x: bounds.minX, y: bounds.maxY)

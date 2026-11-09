@@ -41,6 +41,7 @@ final class PageSidebar: UIView {
         super.init(frame: .zero)
 
         backgroundColor = .systemBackground
+        clipsToBounds = true // while it slides in, nothing spills over the page
         let divider = UIView()
         divider.backgroundColor = .separator
 
@@ -66,7 +67,7 @@ final class PageSidebar: UIView {
         }
         NSLayoutConstraint.activate([
             widthAnchor.constraint(equalToConstant: Self.width),
-            divider.leadingAnchor.constraint(equalTo: leadingAnchor),
+            divider.trailingAnchor.constraint(equalTo: trailingAnchor),
             divider.topAnchor.constraint(equalTo: topAnchor),
             divider.bottomAnchor.constraint(equalTo: bottomAnchor),
             divider.widthAnchor.constraint(equalToConstant: 0.5),

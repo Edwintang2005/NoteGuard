@@ -91,9 +91,22 @@ struct InkRendererTests {
         let page = try #require(pdf.page(at: 0))
         let drawing = PKDrawing(strokes: [makeStroke([CGPoint(x: 50, y: 50), CGPoint(x: 400, y: 300)], width: 4)])
         page.addAnnotation(InkAnnotation(drawing: drawing, pageBounds: page.bounds(for: .cropBox)))
-        let data = try #require(pdf.dataRepresentation())
+        let data = try #require(InkAnnotation.whileWriting { pdf.dataRepresentation() })
         let text = String(decoding: data, as: UTF8.self)
         #expect(!text.contains("/Subtype /Image"), "pen ink should be paths, not an embedded picture")
+    }
+
+    /// The live canvas shows ink on screen. If the annotation painted there too, PDFView could keep
+    /// a stale copy under the canvas after a save (lasso moves leaving copies, erasing not working).
+    @Test func inkAnnotationPaintsOnlyWhileWriting() {
+        let drawing = PKDrawing(strokes: [makeStroke([CGPoint(x: 20, y: 20), CGPoint(x: 180, y: 180)], width: 6)])
+        let annotation = InkAnnotation(drawing: drawing, pageBounds: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let onScreen = alphaChannel(size: CGSize(width: 200, height: 200)) { annotation.draw(with: .cropBox, in: $0) }
+        #expect(onScreen.allSatisfy { $0 == 0 })
+        let written = InkAnnotation.whileWriting {
+            alphaChannel(size: CGSize(width: 200, height: 200)) { annotation.draw(with: .cropBox, in: $0) }
+        }
+        #expect(written.contains { $0 > 200 })
     }
 }
 

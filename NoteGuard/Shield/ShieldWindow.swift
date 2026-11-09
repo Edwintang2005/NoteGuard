@@ -11,15 +11,13 @@ import Combine
 /// Only touches that *start* in a zone are blocked. A stylus stroke that begins outside and
 /// drifts into a zone keeps going.
 ///
-/// The window is sized to just the zones (plus padding), never the whole screen. Some system UI
+/// The window is sized to exactly the zones' bounding box, never the whole screen. Some system UI
 /// — notably the Files browser — runs in another process, and the system won't deliver touches
-/// to it through a full-screen window above it, even a pass-through one.
+/// to it through a window above it, even a pass-through one, so any margin here would be dead.
 final class ShieldWindow: UIWindow {
     private let store: DeadZoneStore
     private let overlay: ShieldOverlayView
     private var cancellables = Set<AnyCancellable>()
-    /// Extra room around the zones so blocked-touch flashes aren't clipped.
-    private let flashMargin: CGFloat = 40
 
     init(windowScene: UIWindowScene, store: DeadZoneStore) {
         self.store = store
@@ -27,6 +25,7 @@ final class ShieldWindow: UIWindow {
         super.init(windowScene: windowScene)
         windowLevel = UIWindow.Level(rawValue: UIWindow.Level.alert.rawValue + 1)
         backgroundColor = .clear
+        clipsToBounds = false // blocked-touch flashes can spill past the zone's edge
         rootViewController = ShieldViewController(overlay: overlay)
 
         // objectWillChange fires before the change lands, so update on the next turn.
@@ -54,8 +53,7 @@ final class ShieldWindow: UIWindow {
         for shape in store.shapes {
             union = union.union(shape.path(from: fixed, to: sceneSpace).bounds)
         }
-        let margin = CGFloat(store.padding) + flashMargin
-        let target = union.insetBy(dx: -margin, dy: -margin).intersection(sceneSpace.bounds).integral
+        let target = union.intersection(sceneSpace.bounds).integral
         guard !target.isNull, !target.isEmpty else {
             isHidden = true // zones are outside this window (e.g. a narrow Split View)
             return
@@ -101,6 +99,7 @@ final class ShieldOverlayView: UIView {
         isOpaque = false
         contentMode = .redraw
         isMultipleTouchEnabled = true
+        clipsToBounds = false
         isAccessibilityElement = false
 
         store.objectWillChange
@@ -123,16 +122,8 @@ final class ShieldOverlayView: UIView {
 
     override func draw(_ rect: CGRect) {
         guard store.showsZones, store.isEnabled, !store.isEditing, let space = fixedSpace else { return }
-        let pad = CGFloat(store.padding)
-
         for shape in store.shapes {
             let body = shape.path(from: space, to: self)
-
-            if pad > 0 {
-                UIColor.systemRed.withAlphaComponent(0.08).setFill()
-                UIBezierPath(cgPath: DeadZoneShape.paddingRegion(of: body.cgPath, padding: pad)).fill()
-            }
-
             UIColor.systemRed.withAlphaComponent(0.16).setFill()
             body.fill()
             UIColor.systemRed.withAlphaComponent(0.55).setStroke()

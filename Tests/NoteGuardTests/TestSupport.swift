@@ -58,3 +58,22 @@ func alphaChannel(size: CGSize, _ draw: (CGContext) -> Void) -> [UInt8] {
     }
     return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
 }
+
+/// Draws with `draw` over white (top-left origin) and counts near-black pixels.
+func darkPixelCount(size: CGSize, _ draw: (CGContext) -> Void) -> Int {
+    let width = Int(size.width), height = Int(size.height)
+    var pixels = [UInt8](repeating: 0, count: width * height * 4)
+    pixels.withUnsafeMutableBytes { buffer in
+        let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                                bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(CGRect(origin: .zero, size: size))
+        context.translateBy(x: 0, y: size.height)
+        context.scaleBy(x: 1, y: -1)
+        draw(context)
+    }
+    return stride(from: 0, to: pixels.count, by: 4).filter { i in
+        pixels[i] < 60 && pixels[i + 1] < 60 && pixels[i + 2] < 60
+    }.count
+}
