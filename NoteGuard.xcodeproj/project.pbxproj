@@ -20,6 +20,7 @@
 		A031AFF3A758F3F9C9D38E41 /* InkAndTemplateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E3CC20480C19CB965273F2 /* InkAndTemplateTests.swift */; };
 		A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */; };
 		AF1CA8C88A778ABB117D8FED /* ObjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E983402ED7CA11BB9191C67E /* ObjectEditor.swift */; };
+		B9FF39713261CDB9E6E75B11 /* LaserPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12984F0780C54D70F755D37B /* LaserPointer.swift */; };
 		BEF20D1E6C4CBE34FADA80CA /* InkAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388CCAC10E4EFC5C12CA62D1 /* InkAnnotation.swift */; };
 		C291332BBCA02BEE637FAB1F /* ShapeRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */; };
 		D152359DD2D04402D54D07A7 /* ShapeRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C7D2FE4D62C5CE376F6646 /* ShapeRecognizerTests.swift */; };
@@ -48,6 +49,7 @@
 		0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookToolbar.swift; sourceTree = "<group>"; };
 		0B8C5729FAE7011169AAF3C0 /* NoteGuardTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoteGuardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1000C194B34BB2B302C7975E /* DocumentBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentBrowserViewController.swift; sourceTree = "<group>"; };
+		12984F0780C54D70F755D37B /* LaserPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaserPointer.swift; sourceTree = "<group>"; };
 		279FF731DE8A6EFF1B400DA0 /* ImageAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageAnnotation.swift; sourceTree = "<group>"; };
 		2C1E99F9F86F76FE92205805 /* DeadZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadZone.swift; sourceTree = "<group>"; };
 		3561B3CDE753615CA36F97E5 /* PageSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSidebar.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 		8576D84B7245A5184492B4C5 /* Notebook */ = {
 			isa = PBXGroup;
 			children = (
+				12984F0780C54D70F755D37B /* LaserPointer.swift */,
 				0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */,
 				56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */,
 				E983402ED7CA11BB9191C67E /* ObjectEditor.swift */,
@@ -284,6 +287,7 @@
 				51839F67FBB504899579AB9B /* ImageAnnotation.swift in Sources */,
 				BEF20D1E6C4CBE34FADA80CA /* InkAnnotation.swift in Sources */,
 				F2D46FFC819F3B2CB151E630 /* InkRenderer.swift in Sources */,
+				B9FF39713261CDB9E6E75B11 /* LaserPointer.swift in Sources */,
 				90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */,
 				76B34E911D409699BB8557C1 /* MaskEditorView.swift in Sources */,
 				7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */,

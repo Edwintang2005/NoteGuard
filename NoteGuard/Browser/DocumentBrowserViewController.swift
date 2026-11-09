@@ -12,8 +12,12 @@ final class DocumentBrowserViewController: UIDocumentBrowserViewController, UIDo
         allowsDocumentCreation = true
         allowsPickingMultipleItems = false
         additionalTrailingNavigationBarButtonItems = [
-            UIBarButtonItem(title: "Shield", image: UIImage(systemName: "checkmark.shield"),
-                            primaryAction: nil, menu: ZoneEditorPresenter.makeMenu(presentingFrom: self)),
+            {
+                let item = UIBarButtonItem(image: UIImage(systemName: "shield"), primaryAction: nil,
+                                           menu: ZoneEditorPresenter.makeMenu(presentingFrom: self))
+                item.accessibilityLabel = "Touch shield"
+                return item
+            }(),
         ]
     }
 
@@ -22,13 +26,13 @@ final class DocumentBrowserViewController: UIDocumentBrowserViewController, UIDo
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // First launch on this device: map the crack before anything else. After that, zones load
-        // automatically and the editor only opens from the Shield menu.
+        // First launch on this device: ask once whether any of the screen needs masking. Only a
+        // "yes" opens the editor; after that it lives in the shield menu.
         let store = DeadZoneStore.shared
         if !didOfferZoneSetup, !store.hasShownSetup, store.shapes.isEmpty {
             didOfferZoneSetup = true
             store.hasShownSetup = true
-            ZoneEditorPresenter.present(from: self)
+            ZoneEditorPresenter.askOnFirstLaunch(from: self)
         }
     }
 

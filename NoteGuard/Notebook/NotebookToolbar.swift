@@ -20,7 +20,7 @@ struct NotebookActions {
     var editZones: () -> Void
 }
 
-/// Document bar: title menu, interaction modes (scroll, draw, select), insert, undo/redo, pages,
+/// Document bar: title menu, interaction modes (scroll, draw, laser), insert, undo/redo, pages,
 /// sidebar and the shield. The pen opens the system tool palette, which you can move anywhere.
 struct NotebookToolbar: View {
     @ObservedObject var chrome: NotebookChrome
@@ -55,9 +55,9 @@ struct NotebookToolbar: View {
 
             Divider().frame(height: 24)
 
-            modeButton(.scroll, symbol: "hand.raised", label: "Scroll")
+            modeButton(.scroll, symbol: "hand.raised", label: "Scroll, and move text boxes and images")
             modeButton(.draw, symbol: "pencil.tip.crop.circle", label: "Draw and annotate")
-            modeButton(.select, symbol: "cursorarrow", label: "Select text boxes and images")
+            modeButton(.laser, symbol: "laser.burst", label: "Laser pointer")
 
             Menu {
                 Button("Text Box", systemImage: "character.textbox", action: actions.insertTextBox)
@@ -88,7 +88,7 @@ struct NotebookToolbar: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// Tapping the active mode again (pen or select) goes back to scrolling, which closes the palette.
+    /// Tapping the active mode again (pen or laser) goes back to scrolling, which closes the palette.
     private func modeButton(_ mode: InteractionMode, symbol: String, label: String) -> some View {
         Button {
             chrome.mode = chrome.mode == mode ? .scroll : mode

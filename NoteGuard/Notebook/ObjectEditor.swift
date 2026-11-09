@@ -1,10 +1,10 @@
 import UIKit
 import PDFKit
 
-/// The Select tool: text boxes and images on the page.
+/// Text boxes and images on the page, active in scroll (hand) mode.
 ///
 /// Tap an object to select it (an edit menu appears), drag it to move, drag a corner handle to
-/// resize, double-tap a text box to type. Two fingers still scroll and zoom. Every change goes
+/// resize, double-tap a text box to type. Drags that start anywhere else scroll as usual. Every change goes
 /// through `NoteDocument`, so it's undoable and saved into the PDF.
 final class ObjectEditor: NSObject {
     private weak var pdfView: PDFView?
@@ -69,6 +69,12 @@ final class ObjectEditor: NSObject {
                 MainActor.assumeIsolated { self?.refresh() }
             })
         }
+    }
+
+    /// Lets a drag that starts on an object or handle move it instead of scrolling. Drags that start
+    /// elsewhere fail this recogniser straight away and scroll.
+    func takePriority(over scrollPan: UIGestureRecognizer) {
+        scrollPan.require(toFail: pan)
     }
 
     /// The PDF's internal scroll view, to follow scrolling with the selection outline.

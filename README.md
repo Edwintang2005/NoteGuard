@@ -9,20 +9,24 @@ cracked screen and a passive (non-Bluetooth) stylus.
   save *in place* wherever they live: iCloud Drive, On My iPad, Dropbox and so on. The app also shows
   up under "Open in…" for PDFs.
 - **New notebooks** in Blank, Lined, Grid or Dotted (A4), saved as normal PDFs.
-- **Markup tools from the Files app.** Notebooks open in scroll mode (the hand): one finger scrolls
-  and nothing gets drawn by accident. Tap the pen to open the system tool palette (pen, fineliner,
-  highlighter, pencil, crayon and more, colour picker with opacity, widths, pixel/object eraser,
-  lasso, ruler, undo/redo); while it's open one finger or the stylus draws and two fingers scroll and
-  zoom. Tap the pen again, or the hand, to close it. Drag the palette to any edge or let it float; its
-  position and tool are remembered.
+- **Three modes in the toolbar.**
+  - **Hand** (notebooks open in it): one finger scrolls and nothing gets drawn by accident. Text
+    boxes and images can be tapped, dragged, resized from the corners and (double-tap) edited.
+  - **Pen**: opens the system tool palette (pen, fineliner, highlighter, pencil, crayon and more,
+    colours with opacity, widths, pixel/object eraser, lasso for handwriting, ruler, undo/redo). One
+    finger or the stylus draws; two fingers scroll and zoom. Tap the pen again, or the hand, to close
+    it, which also saves straight away. The palette can be dragged to any edge or float; its position
+    and tool are remembered, and it steps aside while a sheet, picker or prompt is open.
+  - **Laser**: glowing red lines with a dot at the tip, for presenting. They fade away once the
+    screen has been left alone for 4 seconds and are never saved.
 - **Draw and hold for shapes.** Pause at the end of a stroke to snap it to a line, angle, triangle,
   rectangle, polygon, circle or ellipse (preview while holding, applied on lift). Undo once to get
   the freehand stroke back.
 - **Rename, share and print** from the title menu. Move, duplicate, tag and delete are in the file
   browser's long-press menu, same as Files.
-- **Text boxes and images.** Insert a text box, a photo or an image from Files. The Select tool (arrow)
-  moves them, resizes them from the corners (images keep their shape), double-tap edits text, and
-  an edit menu offers text size, duplicate and delete. Text boxes are standard PDF FreeText
+- **Text boxes and images.** Insert a text box, a photo or an image from Files. In hand mode, drag one
+  to move it, drag a corner to resize it (images keep their shape), double-tap to edit text, and
+  tap for an edit menu with text size, duplicate and delete. Text boxes are standard PDF FreeText
   annotations in Helvetica, so every PDF reader shows them the same.
 - **Pages.** A sidebar of thumbnails on the left that include your handwriting: tap to jump, drag to reorder,
   long-press to duplicate, bookmark, save as template or delete. Templates: Blank, Lined, Grid,
@@ -36,9 +40,10 @@ cracked screen and a passive (non-Bluetooth) stylus.
   so Files, Preview and Acrobat show it crisply at any zoom. The same annotation carries the raw
   PencilKit strokes, so reopening in NoteGuard gives back fully editable ink. No sidecar files.
   Saving is a single pass: 100 inked pages serialise in about half a second.
-- **Dead-zone shield.** Map the cracked area once with freehand outlines, rectangles or ellipses.
-  Exactly the masked area is ignored, with no margin around it. Zones are saved on the device (not synced, since a crack belongs to one iPad);
-  setup opens automatically only on first launch, and later from the Shield menu. Any touch that *starts* inside a zone is swallowed before the app sees it. Strokes
+- **Dead-zone shield (optional).** On first launch NoteGuard asks once whether part of the screen is
+  unreliable; only a yes opens the zone editor, and otherwise the shield is just a quiet icon whose
+  menu offers to mask off part of the screen later. Map the area with freehand outlines, rectangles
+  or ellipses. Exactly the masked area is ignored, with no margin around it. Zones are saved on the device (not synced, since a crack belongs to one iPad). Any touch that *starts* inside a zone is swallowed before the app sees it. Strokes
   that start outside and drift in keep drawing.
 
 ## How the shield works
@@ -101,8 +106,9 @@ Distribute App → TestFlight & App Store. Bump `CURRENT_PROJECT_VERSION` in `pr
 Open `NoteGuard.xcodeproj`, connect the iPad, select it as the run destination, and press Run.
 Enable Developer Mode on the iPad if prompted (Settings → Privacy & Security → Developer Mode).
 
-On first launch the zone editor opens: trace around the crack, tap Done, then press around the
-crack. Each blocked touch flashes red and bumps the counter in the shield menu.
+On first launch, answer "Mask Off Part of the Screen" to open the zone editor: trace around the
+crack, tap Done, then press around the crack. Each blocked touch flashes red and bumps the counter
+in the shield menu.
 
 ## Known gaps
 

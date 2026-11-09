@@ -8,12 +8,14 @@ import Combine
 import os
 
 enum InteractionMode {
-    /// One finger scrolls; nothing on the page reacts. Notebooks open in this mode.
+    /// One finger scrolls. Text boxes and images can be tapped, dragged, resized and (double-tap)
+    /// edited; handwriting is left alone. Notebooks open in this mode.
     case scroll
-    /// The tool palette is open; fingers and stylus draw with its tool; two fingers scroll.
+    /// The tool palette is open (its lasso selects handwriting); one finger or the stylus draws
+    /// with its tool; two fingers scroll.
     case draw
-    /// Tap, move, resize and edit text boxes and images; two fingers scroll.
-    case select
+    /// Laser pointer: a fading red dot for presenting; nothing is drawn. Two fingers scroll.
+    case laser
 }
 
 /// Observable state for the notebook's top bar.
@@ -39,6 +41,7 @@ final class NotebookViewController: UIViewController {
     private let pdfView = PDFView()
     private lazy var sidebar = PageSidebar(document: document)
     private lazy var objectEditor = ObjectEditor(pdfView: pdfView, document: document)
+    private var laser: LaserPointer?
     private let toolPicker = PKToolPicker()
     private var toolbarHost: UIHostingController<NotebookToolbar>?
     /// Canvases (and their shape helpers) for the pages PDFKit currently has on screen.
@@ -46,6 +49,9 @@ final class NotebookViewController: UIViewController {
     private var shapeAssists: [ObjectIdentifier: ShapeAssist] = [:]
     private var cancellables = Set<AnyCancellable>()
     private var isClosing = false
+    /// Screens presented over the notebook that haven't gone away yet (weak, so one that never
+    /// appeared can't keep the palette hidden forever).
+    private let coveringControllers = NSHashTable<UIViewController>.weakObjects()
     private let log = Logger(subsystem: "NoteGuard", category: "Notebook")
 
     init(document: NoteDocument, rename: @escaping Renamer, onClosed: @escaping () -> Void) {
@@ -101,6 +107,7 @@ final class NotebookViewController: UIViewController {
         view.addSubview(toolbar.view)
         toolbar.didMove(toParent: self)
         toolbarHost = toolbar
+        laser = LaserPointer(target: pdfView, container: view, above: content)
 
         let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
@@ -148,6 +155,8 @@ final class NotebookViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         objectEditor.follow(scrollView: documentScrollView)
+        // Dragging a text box or image moves it; dragging anywhere else scrolls.
+        if let scrollPan = documentScrollView?.panGestureRecognizer { objectEditor.takePriority(over: scrollPan) }
         applyMode(chrome.mode)
         updatePageState()
     }
@@ -196,16 +205,39 @@ final class NotebookViewController: UIViewController {
         toolPicker.selectedToolItem.tool ?? PKInkingTool(.pen, color: .black, width: 3)
     }
 
-    /// The palette is open exactly while drawing. Call again after anything that may have taken
-    /// first responder (alerts, pickers, text editing).
+    /// The palette is open exactly while drawing, and nothing (a sheet, picker, alert or popover)
+    /// is shown over the notebook. Call again after anything that may have taken first responder.
     private func syncPalette(for mode: InteractionMode? = nil) {
-        let visible = (mode ?? chrome.mode) == .draw && !isClosing
+        let covered = coveringControllers.allObjects.contains { !$0.isBeingDismissed }
+        let visible = (mode ?? chrome.mode) == .draw && !isClosing && !covered
         // Registered for the page canvases too: touching a canvas can make it first responder, and
         // the palette must stay up (or down) whichever responder is current.
         toolPicker.setVisible(visible, forFirstResponder: self)
         for canvas in canvases.values { toolPicker.setVisible(visible, forFirstResponder: canvas) }
         if visible, !isFirstResponder, !canvases.values.contains(where: \.isFirstResponder) {
             becomeFirstResponder()
+        } else if !visible {
+            // The palette only updates when the first responder changes, so step aside: otherwise
+            // it can stay on screen over a sheet even after being told to hide.
+            if isFirstResponder { resignFirstResponder() }
+            canvases.values.first(where: \.isFirstResponder)?.resignFirstResponder()
+        }
+    }
+
+    /// The palette floats above the whole app, so it would sit on top of anything the notebook
+    /// presents (the photo picker, share sheet, alerts...). Hide it for as long as that's up.
+    override func present(_ controller: UIViewController, animated: Bool, completion: (() -> Void)? = nil) {
+        // Counted from the request, not from when it appears: some screens (the photo picker)
+        // load first and only show up a moment later.
+        coveringControllers.add(controller)
+        super.present(controller, animated: animated, completion: completion)
+        syncPalette()
+        // Bring the palette back once the presented screen has left, however it was closed
+        // (a button, a swipe down, tapping outside a popover).
+        PresentationEndWatcher.attach(to: controller) { [weak self, weak controller] in
+            guard let self else { return }
+            if let controller { coveringControllers.remove(controller) }
+            syncPalette()
         }
     }
 
@@ -221,11 +253,22 @@ final class NotebookViewController: UIViewController {
     }
 
     private func applyMode(_ mode: InteractionMode) {
+        // Called before `chrome.mode` changes, so it still holds the mode being left. Closing the
+        // pen drawer ends a drawing session: save now rather than on the next autosave.
+        if chrome.mode == .draw, mode != .draw { saveNow() }
         for canvas in canvases.values { canvas.isUserInteractionEnabled = mode == .draw }
-        // Drawing and selecting: one finger acts, two scroll. Scroll mode: one finger scrolls.
+        // Drawing and pointing: one finger acts, two scroll. Scroll mode: one finger scrolls.
         documentScrollView?.panGestureRecognizer.minimumNumberOfTouches = mode == .scroll ? 1 : 2
-        objectEditor.isActive = mode == .select
+        objectEditor.isActive = mode == .scroll
+        laser?.isActive = mode == .laser
         syncPalette(for: mode)
+    }
+
+    private func saveNow() {
+        guard document.hasUnsavedChanges else { return }
+        document.autosave { [weak self] success in
+            if !success { self?.log.error("Saving after drawing failed") }
+        }
     }
 
     // MARK: Actions
@@ -240,7 +283,7 @@ final class NotebookViewController: UIViewController {
             print: { [weak self] in self?.printDocument() },
             insertTextBox: { [weak self] in
                 guard let self else { return }
-                chrome.mode = .select
+                chrome.mode = .scroll
                 objectEditor.insertTextBox()
             },
             insertPhoto: { [weak self] in self?.pickPhoto() },
@@ -342,7 +385,12 @@ final class NotebookViewController: UIViewController {
             info.outputType = .general
             printer.printInfo = info
             printer.printingItem = document.fileURL
-            printer.present(from: titleAnchor, in: view, animated: true)
+            // The print options are a popover that doesn't go through `present`.
+            toolPicker.setVisible(false, forFirstResponder: self)
+            for canvas in canvases.values { toolPicker.setVisible(false, forFirstResponder: canvas) }
+            printer.present(from: titleAnchor, in: view, animated: true) { [weak self] _, _, _ in
+                self?.syncPalette()
+            }
         }
     }
 
@@ -370,7 +418,7 @@ final class NotebookViewController: UIViewController {
     }
 
     private func insert(_ image: UIImage) {
-        chrome.mode = .select
+        chrome.mode = .scroll
         objectEditor.insertImage(image)
         syncPalette()
     }
@@ -592,5 +640,31 @@ private extension PDFDocument {
             if let page = page(at: i), ObjectIdentifier(page) == key { return page }
         }
         return nil
+    }
+}
+
+/// An invisible view placed inside a presented screen that reports when that screen leaves the
+/// window, i.e. when it has been dismissed by any route.
+private final class PresentationEndWatcher: UIView {
+    private var onEnd: (() -> Void)?
+    private var wasOnScreen = false
+
+    static func attach(to controller: UIViewController, onEnd: @escaping () -> Void) {
+        let watcher = PresentationEndWatcher(frame: .zero)
+        watcher.onEnd = onEnd
+        watcher.isHidden = true
+        watcher.isUserInteractionEnabled = false
+        watcher.isAccessibilityElement = false
+        controller.view.addSubview(watcher)
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil { wasOnScreen = true; return }
+        guard wasOnScreen, let onEnd else { return }
+        self.onEnd = nil
+        // Let UIKit finish clearing `presentedViewController` first.
+        DispatchQueue.main.async { onEnd() }
+        removeFromSuperview()
     }
 }
