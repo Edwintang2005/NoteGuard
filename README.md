@@ -18,7 +18,7 @@ cracked screen and a passive (non-Bluetooth) stylus.
     it, which also saves straight away. The palette can be dragged to any edge or float; its position
     and tool are remembered, and it steps aside while a sheet, picker or prompt is open.
   - **Laser**: glowing red lines with a dot at the tip, for presenting. They fade away once the
-    screen has been left alone for 4 seconds and are never saved.
+    screen has been left alone for 3 seconds and are never saved.
 - **Draw and hold for shapes.** Pause at the end of a stroke to snap it to a line, angle, triangle,
   rectangle, polygon, circle or ellipse (preview while holding, applied on lift). Undo once to get
   the freehand stroke back.

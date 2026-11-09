@@ -71,7 +71,7 @@ private final class LaserOverlayView: UIView {
     private var generation = 0
 
     /// How long the lines stay after the last touch lifts.
-    private let idleDelay: TimeInterval = 4
+    private let idleDelay: TimeInterval = 3
     private let fadeDuration: TimeInterval = 0.6
     private let dotRadius: CGFloat = 6
 

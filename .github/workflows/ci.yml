@@ -35,14 +35,38 @@ jobs:
       - run: xcodebuild -version
 
       # Pinned in .xcodegen-version (`make project` checks it too): another XcodeGen version
-      # can write a different project and fail the drift check.
+      # can write a different project and fail the drift check. Cached per version, so most runs
+      # don't download it at all.
+      - name: Cache XcodeGen
+        uses: actions/cache@v4
+        with:
+          path: ~/xcodegen
+          key: xcodegen-${{ runner.os }}-${{ hashFiles('.xcodegen-version') }}
+
+      # GitHub's release downloads sometimes fail for a while (HTTP 5xx). Retry, and if the
+      # download still fails, build the same tagged version from source (cloning keeps working
+      # when release downloads don't). Either way it ends up in the same layout.
       - name: Install XcodeGen
         run: |
           XCODEGEN_VERSION=$(cat .xcodegen-version)
-          curl -sSfL -o xcodegen.zip \
-            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
-          unzip -q xcodegen.zip -d "$RUNNER_TEMP"
-          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+          if [ ! -x "$HOME/xcodegen/bin/xcodegen" ]; then
+            rm -rf "$HOME/xcodegen"
+            if curl -sSfL --retry 3 --retry-delay 5 --retry-all-errors --connect-timeout 30 \
+                 -o "$RUNNER_TEMP/xcodegen.zip" \
+                 "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"; then
+              unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+              mv "$RUNNER_TEMP/xcodegen" "$HOME/xcodegen"
+            else
+              echo "::warning::XcodeGen download failed; building ${XCODEGEN_VERSION} from source."
+              git clone -q --depth 1 --branch "$XCODEGEN_VERSION" \
+                https://github.com/yonaskolb/XcodeGen.git "$RUNNER_TEMP/xcodegen-src"
+              # `cd`, not `make -C`: its Makefile finds SettingPresets via $(PWD).
+              (cd "$RUNNER_TEMP/xcodegen-src" && make install PREFIX="$HOME/xcodegen" \
+                SWIFT_BUILD_FLAGS="--disable-sandbox -c release")
+            fi
+          fi
+          echo "$HOME/xcodegen/bin" >> "$GITHUB_PATH"
+          "$HOME/xcodegen/bin/xcodegen" --version
 
       # The project is generated but committed (Xcode Cloud builds from a plain clone).
       - name: Committed project matches project.yml
