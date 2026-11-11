@@ -22,6 +22,7 @@
 		AF1CA8C88A778ABB117D8FED /* ObjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E983402ED7CA11BB9191C67E /* ObjectEditor.swift */; };
 		B9FF39713261CDB9E6E75B11 /* LaserPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12984F0780C54D70F755D37B /* LaserPointer.swift */; };
 		BEF20D1E6C4CBE34FADA80CA /* InkAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388CCAC10E4EFC5C12CA62D1 /* InkAnnotation.swift */; };
+		C08809FF3A786B69E0B777AE /* PageCanvasHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4829E8D288D3971584390654 /* PageCanvasHost.swift */; };
 		C291332BBCA02BEE637FAB1F /* ShapeRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */; };
 		D152359DD2D04402D54D07A7 /* ShapeRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C7D2FE4D62C5CE376F6646 /* ShapeRecognizerTests.swift */; };
 		D2F73F3E1076CEAAFF8BFD9D /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B564F915EDECDB033FE42AB2 /* TestSupport.swift */; };
@@ -55,6 +56,7 @@
 		3561B3CDE753615CA36F97E5 /* PageSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSidebar.swift; sourceTree = "<group>"; };
 		388CCAC10E4EFC5C12CA62D1 /* InkAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkAnnotation.swift; sourceTree = "<group>"; };
 		3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRecognizer.swift; sourceTree = "<group>"; };
+		4829E8D288D3971584390654 /* PageCanvasHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageCanvasHost.swift; sourceTree = "<group>"; };
 		4C3EDDC7C0DC803A5CD060A3 /* PageTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTemplate.swift; sourceTree = "<group>"; };
 		4CCF049B3B601AB2FC750635 /* NoteGuard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NoteGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */,
 				56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */,
 				E983402ED7CA11BB9191C67E /* ObjectEditor.swift */,
+				4829E8D288D3971584390654 /* PageCanvasHost.swift */,
 				3561B3CDE753615CA36F97E5 /* PageSidebar.swift */,
 				B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */,
 				3FFFD078F28ECF1472D138A6 /* ShapeRecognizer.swift */,
@@ -294,6 +297,7 @@
 				E9934258EB9CD323F7FBC26D /* NotebookToolbar.swift in Sources */,
 				2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */,
 				AF1CA8C88A778ABB117D8FED /* ObjectEditor.swift in Sources */,
+				C08809FF3A786B69E0B777AE /* PageCanvasHost.swift in Sources */,
 				66BAD73E6F5113DE6981FFFF /* PageSidebar.swift in Sources */,
 				F640DF25AC0C46922C832B13 /* PageTemplate.swift in Sources */,
 				7F263C222D3041E3FB2056A4 /* ShapeAssist.swift in Sources */,

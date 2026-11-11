@@ -41,7 +41,8 @@ final class ShapeAssist: NSObject {
         guard let canvas else { return }
         // Only pens/markers/pencils snap; erasers and lasso don't.
         guard canvas.tool is PKInkingTool else { reset(); return }
-        let p = gesture.location(in: canvas)
+        // In drawing (page) coordinates: the canvas may be zoomed to render ink at screen resolution.
+        let p = Self.drawingPoint(gesture.location(in: canvas), in: canvas)
 
         switch gesture.state {
         case .began:
@@ -121,10 +122,18 @@ final class ShapeAssist: NSObject {
         shapeLog.debug("recognised \(String(describing: shape), privacy: .public)")
         let tool = canvas.tool as? PKInkingTool
         preview.strokeColor = (tool?.color ?? .systemBlue).withAlphaComponent(0.85).cgColor
-        preview.lineWidth = max(2, min(tool?.width ?? 3, 12))
-        preview.path = shape.path.cgPath
+        // The preview layer is in the canvas's (zoomed) view coordinates.
+        let zoom = canvas.zoomScale
+        preview.lineWidth = max(2, min(tool?.width ?? 3, 12)) * zoom
+        var toView = CGAffineTransform(scaleX: zoom, y: zoom)
+        preview.path = shape.path.cgPath.copy(using: &toView)
         preview.frame = canvas.bounds
         preview.isHidden = false
+    }
+
+    private static func drawingPoint(_ point: CGPoint, in canvas: PKCanvasView) -> CGPoint {
+        let zoom = max(canvas.zoomScale, 0.0001)
+        return CGPoint(x: (point.x + canvas.contentOffset.x) / zoom, y: (point.y + canvas.contentOffset.y) / zoom)
     }
 
     private func reset() {

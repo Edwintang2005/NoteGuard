@@ -140,6 +140,11 @@ final class NotebookViewController: UIViewController {
         }
         document.onAnnotationsChanged = { [weak self] page in self?.sidebar.invalidateThumbnail(for: page) }
 
+        // Zooming changes how far each page (and its canvas) is magnified; keep ink sharp.
+        NotificationCenter.default.publisher(for: .PDFViewScaleChanged, object: pdfView)
+            .sink { [weak self] _ in self?.refreshInkResolution() }
+            .store(in: &cancellables)
+
         NotificationCenter.default.publisher(for: .PDFViewPageChanged, object: pdfView)
             .sink { [weak self] _ in self?.updatePageState() }
             .store(in: &cancellables)
@@ -159,6 +164,14 @@ final class NotebookViewController: UIViewController {
         if let scrollPan = documentScrollView?.panGestureRecognizer { objectEditor.takePriority(over: scrollPan) }
         applyMode(chrome.mode)
         updatePageState()
+    }
+
+    // MARK: Ink resolution
+
+    /// Zooming changes how far PDFKit magnifies each page; re-render ink to match (see
+    /// `PageCanvasHost`).
+    private func refreshInkResolution() {
+        for canvas in canvases.values { (canvas.superview as? PageCanvasHost)?.refreshResolution() }
     }
 
     // MARK: Rotation
@@ -185,6 +198,7 @@ final class NotebookViewController: UIViewController {
             pdfView.layoutDocumentView()
             if let anchor { pdfView.go(to: PDFDestination(page: anchor.page, at: anchor.point)) }
             objectEditor.refresh()
+            refreshInkResolution()
             UIView.animate(withDuration: 0.2) { self.pdfView.alpha = 1 }
         })
     }
@@ -568,7 +582,7 @@ extension NotebookViewController: PKToolPickerObserver {
 extension NotebookViewController: PDFPageOverlayViewProvider {
     func pdfView(_ view: PDFView, overlayViewFor page: PDFPage) -> UIView? {
         let key = ObjectIdentifier(page)
-        if let existing = canvases[key] { return existing }
+        if let existing = canvases[key]?.superview { return existing }
 
         let canvas = PKCanvasView()
         canvas.backgroundColor = .clear
@@ -585,7 +599,7 @@ extension NotebookViewController: PDFPageOverlayViewProvider {
         toolPicker.setVisible(chrome.mode == .draw, forFirstResponder: canvas)
         canvases[key] = canvas
         shapeAssists[key] = ShapeAssist(canvas: canvas)
-        return canvas
+        return PageCanvasHost(canvas: canvas)
     }
 
     func pdfView(_ pdfView: PDFView, willEndDisplayingOverlayView overlayView: UIView, for page: PDFPage) {
