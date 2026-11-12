@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		039F4371ECAE04ABFC31BD2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DFB0152B0B8E87B8953EFD4 /* AppDelegate.swift */; };
 		2EC397C05F8647CB09E80E77 /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */; };
+		3000D8B828E7DFC6AB543E4C /* InkLasso.swift in Sources */ = {isa = PBXBuildFile; fileRef = B626D4AD2CCB431B000C28C9 /* InkLasso.swift */; };
 		51839F67FBB504899579AB9B /* ImageAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279FF731DE8A6EFF1B400DA0 /* ImageAnnotation.swift */; };
 		66BAD73E6F5113DE6981FFFF /* PageSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3561B3CDE753615CA36F97E5 /* PageSidebar.swift */; };
 		7340305BFED2E3E238B94BC4 /* NoteDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8640E6FD2A87A43E268C80C /* NoteDocument.swift */; };
@@ -70,6 +71,7 @@
 		A1C7D2FE4D62C5CE376F6646 /* ShapeRecognizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRecognizerTests.swift; sourceTree = "<group>"; };
 		B52A1ACAE6D6699475A864B7 /* ShapeAssist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeAssist.swift; sourceTree = "<group>"; };
 		B564F915EDECDB033FE42AB2 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		B626D4AD2CCB431B000C28C9 /* InkLasso.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkLasso.swift; sourceTree = "<group>"; };
 		C34E373ADFEE3E3F7513AD89 /* MaskEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskEditorView.swift; sourceTree = "<group>"; };
 		C4B40B6D908FC10BC51CF022 /* ShieldWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldWindow.swift; sourceTree = "<group>"; };
 		C997332F3B41A10DE717285A /* DeadZoneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadZoneTests.swift; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 		8576D84B7245A5184492B4C5 /* Notebook */ = {
 			isa = PBXGroup;
 			children = (
+				B626D4AD2CCB431B000C28C9 /* InkLasso.swift */,
 				12984F0780C54D70F755D37B /* LaserPointer.swift */,
 				0B723763702A9AB9E2ECB951 /* NotebookToolbar.swift */,
 				56C3B3FE97EA0EB9F60CB5B8 /* NotebookViewController.swift */,
@@ -289,6 +292,7 @@
 				A10309FEBD251C47E1A2EA8E /* DocumentBrowserViewController.swift in Sources */,
 				51839F67FBB504899579AB9B /* ImageAnnotation.swift in Sources */,
 				BEF20D1E6C4CBE34FADA80CA /* InkAnnotation.swift in Sources */,
+				3000D8B828E7DFC6AB543E4C /* InkLasso.swift in Sources */,
 				F2D46FFC819F3B2CB151E630 /* InkRenderer.swift in Sources */,
 				B9FF39713261CDB9E6E75B11 /* LaserPointer.swift in Sources */,
 				90881F190CCF709492CE098A /* MaskEditorCanvas.swift in Sources */,

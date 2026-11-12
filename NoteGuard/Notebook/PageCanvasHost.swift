@@ -13,6 +13,8 @@ import PencilKit
 /// view. PDFKit's magnification undoes that scale-down, leaving ink drawn at full resolution.
 final class PageCanvasHost: UIView {
     let canvas: PKCanvasView
+    /// NoteGuard's resizable lasso, over the canvas; in page (drawing) coordinates like this view.
+    let lasso = InkLassoView()
     private(set) var magnification: CGFloat = 1
 
     /// Upper limits, so a deep zoom can't ask PencilKit for an enormous canvas: at most 8× and at
@@ -26,6 +28,8 @@ final class PageCanvasHost: UIView {
         backgroundColor = .clear
         isOpaque = false
         addSubview(canvas)
+        lasso.canvas = canvas
+        addSubview(lasso)
     }
 
     @available(*, unavailable)
@@ -58,6 +62,8 @@ final class PageCanvasHost: UIView {
         canvas.contentScaleFactor = scale
         canvas.transform = CGAffineTransform(scaleX: 1 / m, y: 1 / m)
         canvas.center = CGPoint(x: bounds.midX, y: bounds.midY)
+        lasso.frame = bounds
+        lasso.magnification = m
     }
 
     /// How many screen points one page point covers right now.

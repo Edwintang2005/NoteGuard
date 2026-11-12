@@ -22,6 +22,7 @@ enum InteractionMode {
 final class NotebookChrome: ObservableObject {
     @Published var title: String
     @Published var mode: InteractionMode = .scroll
+    @Published var laserStyle: LaserStyle = .saved
     @Published var isSidebarVisible = false
     @Published var isCurrentPageBookmarked = false
     @Published var customTemplates: [CustomTemplate] = []
@@ -60,7 +61,10 @@ final class NotebookViewController: UIViewController {
         self.onClosed = onClosed
         self.chrome = NotebookChrome(title: document.localizedName)
         super.init(nibName: nil, bundle: nil)
-        modalPresentationStyle = .fullScreen
+        // Over, not instead of, the Files browser: with .fullScreen UIKit removes the browser (an
+        // out-of-process view) from the window while a notebook is open and re-attaches it on
+        // close, which could leave part of the file list blank until the app restarted.
+        modalPresentationStyle = .overFullScreen
     }
 
     @available(*, unavailable)
@@ -108,13 +112,21 @@ final class NotebookViewController: UIViewController {
         toolbar.didMove(toParent: self)
         toolbarHost = toolbar
         laser = LaserPointer(target: pdfView, container: view, above: content)
+        laser?.style = chrome.laserStyle
+        chrome.$laserStyle
+            .sink { [weak self] style in
+                LaserStyle.saved = style
+                self?.laser?.style = style
+            }
+            .store(in: &cancellables)
 
         let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
             toolbar.view.topAnchor.constraint(equalTo: guide.topAnchor, constant: 6),
-            toolbar.view.centerXAnchor.constraint(equalTo: guide.centerXAnchor),
-            toolbar.view.leadingAnchor.constraint(greaterThanOrEqualTo: guide.leadingAnchor, constant: 12),
-            toolbar.view.trailingAnchor.constraint(lessThanOrEqualTo: guide.trailingAnchor, constant: -12),
+            // Full width: SwiftUI centres the bar itself. Sizing the host to the bar's intrinsic
+            // width let it lag behind changes (counter digits, renames) and squeeze the title.
+            toolbar.view.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 12),
+            toolbar.view.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -12),
             content.topAnchor.constraint(equalTo: toolbar.view.bottomAnchor, constant: 6),
             content.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             content.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -164,6 +176,45 @@ final class NotebookViewController: UIViewController {
         if let scrollPan = documentScrollView?.panGestureRecognizer { objectEditor.takePriority(over: scrollPan) }
         applyMode(chrome.mode)
         updatePageState()
+    }
+
+    // MARK: Lasso
+
+    /// Picking the lasso in the palette switches to NoteGuard's own lasso, which can also resize.
+    private func isLassoSelected(in mode: InteractionMode) -> Bool {
+        guard mode == .draw else { return false }
+        return toolPicker.selectedToolItem is PKToolPickerLassoItem || toolPicker.selectedToolItem.tool is PKLassoTool
+    }
+
+    private func updateLassos(for mode: InteractionMode? = nil) {
+        for canvas in canvases.values {
+            if let host = canvas.superview as? PageCanvasHost { updateLasso(in: host, mode: mode) }
+        }
+    }
+
+    private func updateLasso(in host: PageCanvasHost, mode: InteractionMode? = nil) {
+        let mode = mode ?? chrome.mode
+        let lassoOn = isLassoSelected(in: mode)
+        host.lasso.isActive = lassoOn
+        host.canvas.isUserInteractionEnabled = mode == .draw && !lassoOn
+    }
+
+    /// One undo step for a lasso edit; works whether or not the page is still on screen.
+    private func registerInkUndo(before: PKDrawing, after: PKDrawing, page: PDFPage, actionName: String) {
+        document.undoManager.registerUndo(withTarget: self) { controller in
+            controller.setInk(before, on: page)
+            controller.registerInkUndo(before: after, after: before, page: page, actionName: actionName)
+        }
+        document.undoManager.setActionName(actionName)
+    }
+
+    private func setInk(_ drawing: PKDrawing, on page: PDFPage) {
+        if let canvas = canvases[ObjectIdentifier(page)] {
+            canvas.drawing = drawing // saved through the canvas delegate
+        } else {
+            document.setDrawing(drawing, for: page)
+            sidebar.invalidateThumbnail(for: page)
+        }
     }
 
     // MARK: Ink resolution
@@ -274,6 +325,7 @@ final class NotebookViewController: UIViewController {
         // Drawing and pointing: one finger acts, two scroll. Scroll mode: one finger scrolls.
         documentScrollView?.panGestureRecognizer.minimumNumberOfTouches = mode == .scroll ? 1 : 2
         objectEditor.isActive = mode == .scroll
+        updateLassos(for: mode)
         laser?.isActive = mode == .laser
         syncPalette(for: mode)
     }
@@ -575,6 +627,10 @@ final class NotebookViewController: UIViewController {
 extension NotebookViewController: PKToolPickerObserver {
     // The palette is only on screen in draw mode, so a tool change never needs to switch modes.
     // (Restoring the saved tool fires this on open too, which used to start notebooks in draw mode.)
+
+    func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
+        updateLassos()
+    }
 }
 
 // MARK: - Page overlays
@@ -599,7 +655,13 @@ extension NotebookViewController: PDFPageOverlayViewProvider {
         toolPicker.setVisible(chrome.mode == .draw, forFirstResponder: canvas)
         canvases[key] = canvas
         shapeAssists[key] = ShapeAssist(canvas: canvas)
-        return PageCanvasHost(canvas: canvas)
+        let host = PageCanvasHost(canvas: canvas)
+        host.lasso.onCommit = { [weak self, weak page] before, after, name in
+            guard let self, let page else { return }
+            registerInkUndo(before: before, after: after, page: page, actionName: name)
+        }
+        updateLasso(in: host)
+        return host
     }
 
     func pdfView(_ pdfView: PDFView, willEndDisplayingOverlayView overlayView: UIView, for page: PDFPage) {
@@ -612,6 +674,7 @@ extension NotebookViewController: PDFPageOverlayViewProvider {
 extension NotebookViewController: PKCanvasViewDelegate {
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
         guard let key = canvases.first(where: { $0.value === canvasView })?.key else { return }
+        (canvasView.superview as? PageCanvasHost)?.lasso.drawingChangedElsewhere()
         // A snapped shape replaces the stroke and triggers another change; save on that one.
         if shapeAssists[key]?.drawingDidChange() == true { return }
         guard let page = document.pdf.page(withKey: key) else { return }

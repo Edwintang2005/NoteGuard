@@ -4,8 +4,31 @@ import UIKit
 /// a dot at the tip, for presenting or pointing something out. The lines are temporary: once the
 /// screen has been left alone for a few seconds they fade away. Nothing is saved into the
 /// notebook. Two fingers still scroll and zoom.
+/// What the laser leaves behind.
+enum LaserStyle: String, CaseIterable, Identifiable {
+    /// Glowing lines that fade a few seconds after the last touch.
+    case lines
+    /// Just a red dot that follows the finger and disappears on lift.
+    case dot
+
+    var id: String { rawValue }
+    var title: String { self == .lines ? "Fading Lines" : "Dot Only" }
+    var symbol: String { self == .lines ? "laser.burst" : "smallcircle.filled.circle" }
+
+    private static let key = "laser.style"
+    static var saved: LaserStyle {
+        get { UserDefaults.standard.string(forKey: key).flatMap(LaserStyle.init) ?? .lines }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: key) }
+    }
+}
+
 final class LaserPointer: NSObject, UIGestureRecognizerDelegate {
     private let overlay = LaserOverlayView()
+
+    var style: LaserStyle {
+        get { overlay.style }
+        set { overlay.style = newValue }
+    }
     private let press = UILongPressGestureRecognizer()
 
     var isActive = false {
@@ -65,6 +88,9 @@ private final class LaserOverlayView: UIView {
     private let lines = CAShapeLayer()
     private let dot = CAShapeLayer()
     private var path = CGMutablePath()
+    var style: LaserStyle = .lines {
+        didSet { if style != oldValue { clear() } }
+    }
     private var isDrawing = false
     private var fadeTimer: Timer?
     /// Bumped whenever a touch starts, so a fade that was interrupted doesn't clear new lines.
@@ -121,14 +147,16 @@ private final class LaserOverlayView: UIView {
         lines.removeAnimation(forKey: "fade")
         lines.opacity = 1
         isDrawing = true
-        path.move(to: point)
-        path.addLine(to: point) // a tap leaves a dot-sized mark
+        if style == .lines {
+            path.move(to: point)
+            path.addLine(to: point) // a tap leaves a dot-sized mark
+        }
         update(dotAt: point)
     }
 
     func move(to point: CGPoint) {
         guard isDrawing else { return begin(at: point) }
-        path.addLine(to: point)
+        if style == .lines { path.addLine(to: point) }
         update(dotAt: point)
     }
 
@@ -139,7 +167,7 @@ private final class LaserOverlayView: UIView {
         CATransaction.setAnimationDuration(0.25)
         dot.opacity = 0
         CATransaction.commit()
-        scheduleFade()
+        if style == .lines { scheduleFade() }
     }
 
     /// Removes everything at once (leaving laser mode).
@@ -159,7 +187,7 @@ private final class LaserOverlayView: UIView {
     private func update(dotAt point: CGPoint) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        lines.path = path.copy()
+        lines.path = style == .lines ? path.copy() : nil
         dot.position = point
         dot.opacity = 1
         CATransaction.commit()

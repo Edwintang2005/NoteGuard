@@ -28,6 +28,11 @@ struct NotebookToolbar: View {
     let actions: NotebookActions
 
     var body: some View {
+        bar
+            .frame(maxWidth: .infinity) // centred in the full-width host
+    }
+
+    private var bar: some View {
         HStack(spacing: 16) {
             Button(action: actions.close) {
                 Image(systemName: "chevron.backward")
@@ -50,19 +55,32 @@ struct NotebookToolbar: View {
                         .font(.subheadline)
                 }
             }
-            .layoutPriority(-1)
+            .layoutPriority(1)
             .accessibilityLabel("Document menu, \(chrome.title)")
 
             Divider().frame(height: 24)
 
             modeButton(.scroll, symbol: "hand.raised", label: "Scroll, and move text boxes and images")
             modeButton(.draw, symbol: "pencil.tip.crop.circle", label: "Draw and annotate")
-            modeButton(.laser, symbol: "laser.burst", label: "Laser pointer")
+            laserButton
 
             Menu {
                 Button("Text Box", systemImage: "character.textbox", action: actions.insertTextBox)
                 Button("Photo…", systemImage: "photo", action: actions.insertPhoto)
                 Button("Image from Files…", systemImage: "folder", action: actions.insertImageFile)
+                Divider()
+                Menu("Page After This One", systemImage: "doc.badge.plus") {
+                    ForEach(PageTemplate.allCases) { template in
+                        Button(template.title, systemImage: template.symbol) { actions.addPage(.builtIn(template)) }
+                    }
+                    if !chrome.customTemplates.isEmpty {
+                        Section("My Templates") {
+                            ForEach(chrome.customTemplates) { template in
+                                Button(template.name, systemImage: "doc.richtext") { actions.addPage(.custom(template)) }
+                            }
+                        }
+                    }
+                }
             } label: {
                 Image(systemName: "plus.circle")
             }
@@ -88,6 +106,27 @@ struct NotebookToolbar: View {
         .glassEffect(.regular, in: .capsule)
     }
 
+    /// Tap: laser on or off. Long-press: choose fading lines or a plain dot.
+    private var laserButton: some View {
+        let active = chrome.mode == .laser
+        return Menu {
+            Picker("Laser Style", selection: $chrome.laserStyle) {
+                ForEach(LaserStyle.allCases) { style in
+                    Label(style.title, systemImage: style.symbol).tag(style)
+                }
+            }
+        } label: {
+            Image(systemName: chrome.laserStyle.symbol)
+                .symbolVariant(active ? .fill : .none)
+                .padding(6)
+                .background(active ? Color.accentColor.opacity(0.18) : .clear, in: .circle)
+        } primaryAction: {
+            chrome.mode = active ? .scroll : .laser
+        }
+        .accessibilityLabel("Laser pointer, \(chrome.laserStyle.title). Long-press to change.")
+        .accessibilityAddTraits(active ? .isSelected : [])
+    }
+
     /// Tapping the active mode again (pen or laser) goes back to scrolling, which closes the palette.
     private func modeButton(_ mode: InteractionMode, symbol: String, label: String) -> some View {
         Button {
@@ -104,18 +143,6 @@ struct NotebookToolbar: View {
 
     private var pagesMenu: some View {
         Menu {
-            Menu("Add Page After This One", systemImage: "doc.badge.plus") {
-                ForEach(PageTemplate.allCases) { template in
-                    Button(template.title, systemImage: template.symbol) { actions.addPage(.builtIn(template)) }
-                }
-                if !chrome.customTemplates.isEmpty {
-                    Section("My Templates") {
-                        ForEach(chrome.customTemplates) { template in
-                            Button(template.name, systemImage: "doc.richtext") { actions.addPage(.custom(template)) }
-                        }
-                    }
-                }
-            }
             Button("Duplicate This Page", systemImage: "plus.square.on.square", action: actions.duplicatePage)
             Button(chrome.isCurrentPageBookmarked ? "Remove Bookmark" : "Bookmark This Page",
                    systemImage: chrome.isCurrentPageBookmarked ? "bookmark.slash" : "bookmark",
