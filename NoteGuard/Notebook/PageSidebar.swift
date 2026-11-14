@@ -173,7 +173,6 @@ final class PageSidebar: UIView {
         let crop = page.bounds(for: .cropBox)
         let scale = width / max(crop.width, 1)
         let size = CGSize(width: width, height: (crop.height * scale).rounded())
-        let base = page.thumbnail(of: CGSize(width: size.width * screenScale, height: size.height * screenScale), for: .cropBox)
         var ink: UIImage?
         if let drawing, !drawing.strokes.isEmpty {
             UITraitCollection(userInterfaceStyle: .light).performAsCurrent {
@@ -182,10 +181,17 @@ final class PageSidebar: UIView {
         }
         let format = UIGraphicsImageRendererFormat()
         format.scale = screenScale
-        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
             UIColor.white.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
-            base.draw(in: CGRect(origin: .zero, size: size))
+            // Drawn through the page itself rather than PDFPage.thumbnail, which on iOS bypasses
+            // NotebookPDFPage's handling of layered content.
+            let cg = context.cgContext
+            cg.saveGState()
+            cg.translateBy(x: 0, y: size.height)
+            cg.scaleBy(x: scale, y: -scale)
+            page.draw(with: .cropBox, to: cg)
+            cg.restoreGState()
             ink?.draw(in: CGRect(origin: .zero, size: size))
         }
     }

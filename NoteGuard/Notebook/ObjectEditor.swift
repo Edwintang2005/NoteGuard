@@ -30,6 +30,8 @@ final class ObjectEditor: NSObject {
 
     /// Told when text editing starts/ends, so the notebook can restore the tool palette afterwards.
     var onTextEditingChanged: ((Bool) -> Void)?
+    /// A tap that didn't land on a text box or image. Return true if it was handled (e.g. a link).
+    var onTapElsewhere: ((CGPoint) -> Bool)?
 
     var isActive = false {
         didSet {
@@ -173,6 +175,7 @@ final class ObjectEditor: NSObject {
             select(annotation, on: page, showMenu: true)
         } else {
             deselect()
+            _ = onTapElsewhere?(point)
         }
     }
 

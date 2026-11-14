@@ -31,15 +31,27 @@ cracked screen and a passive (non-Bluetooth) stylus.
 - **Pages.** A sidebar of thumbnails on the left that include your handwriting: tap to jump, drag to reorder,
   long-press to duplicate, bookmark, save as template or delete. Templates: Blank, Lined, Grid,
   Dotted, Cornell Notes, Music Staves, Weekly Planner, plus any page you save as your own template.
+- **Lecture slides and other layered PDFs.** Apple's PDF renderer (used by Preview and PDFKit) ignores
+  PDF layers and can flood a page with colour when link text is drawn as a clipping mask, as LaTeX
+  Beamer slides do. NoteGuard rewrites such pages for display only: hidden and print-only layers stay
+  hidden, link text gets its colour back, and click-to-reveal pop-ups open and close when their link
+  is tapped.
+- **Links and text.** In hand mode, tap a link to follow it: internal links jump to their page, web
+  links open in the browser. Long-press text in the PDF to select and copy it.
 - **Bookmarks** are the PDF's outline, so other readers list them too (and outlines that came with a
   PDF, such as a textbook's chapters, show up in the Bookmarks tab).
 - **Everything is undoable:** strokes, shapes, page add/delete/move/duplicate, bookmarks, text and
   image edits.
+- **Saving never rewrites your PDF.** NoteGuard appends its changes (ink, text boxes, images, and
+  page or bookmark changes) to the end of the original file as an incremental update, the way
+  Acrobat does, so the original bytes, layers and links stay exactly as they were. Each save
+  replaces the previous update from the same session rather than piling up. (PDFKit's own save
+  rewrites every page on iOS, which strips layers and can bake broken rendering into slides.)
 - **Ink lives inside the PDF, as vectors.** Each page's handwriting is saved as a standard PDF
   annotation drawn with vector paths (textured pencil/crayon/watercolour strokes as 288 dpi images),
   so Files, Preview and Acrobat show it crisply at any zoom. The same annotation carries the raw
   PencilKit strokes, so reopening in NoteGuard gives back fully editable ink. No sidecar files.
-  Saving is a single pass: 100 inked pages serialise in about half a second.
+  
 - **Dead-zone shield (optional).** On first launch NoteGuard asks once whether part of the screen is
   unreliable; only a yes opens the zone editor, and otherwise the shield is just a quiet icon whose
   menu offers to mask off part of the screen later. Map the area with freehand outlines, rectangles
@@ -113,6 +125,8 @@ in the shield menu.
 ## Known gaps
 
 - Textured inks (pencil, crayon, watercolour) are saved as high-resolution images rather than vectors.
+- Encrypted PDFs, and the rare file NoteGuard can't parse, are still saved by PDFKit's full rewrite,
+  which drops layers (optional content) on iOS.
 - Whole-PDF rewrites on save: fast for notebooks, but a several-hundred-page scanned textbook will
   still take a moment each autosave (PDFKit has no incremental save).
 - Inside the Files browser itself the zone tint may not be visible, though blocking still applies.

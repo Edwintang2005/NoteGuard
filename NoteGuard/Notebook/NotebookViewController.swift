@@ -81,7 +81,6 @@ final class NotebookViewController: UIViewController {
         view.backgroundColor = .secondarySystemBackground
 
         pdfView.pageOverlayViewProvider = self
-        pdfView.isInMarkupMode = true
         pdfView.displayMode = .singlePageContinuous
         pdfView.displayDirection = .vertical
         pdfView.displayBox = .cropBox
@@ -140,6 +139,7 @@ final class NotebookViewController: UIViewController {
         toolPicker.colorUserInterfaceStyle = .light   // pages are white, so keep ink colours true
         toolPicker.addObserver(self)
 
+        objectEditor.onTapElsewhere = { [weak self] point in self?.followLink(at: point) ?? false }
         objectEditor.onTextEditingChanged = { [weak self] editing in
             if !editing { self?.syncPalette() }
         }
@@ -176,6 +176,69 @@ final class NotebookViewController: UIViewController {
         if let scrollPan = documentScrollView?.panGestureRecognizer { objectEditor.takePriority(over: scrollPan) }
         applyMode(chrome.mode)
         updatePageState()
+    }
+
+    // MARK: Links and layers
+
+    /// Hand mode: tapping a link follows it. Internal links jump to their page, web links open in
+    /// the browser, and "show/hide" links (layered slides) reveal or hide their pop-up.
+    private func followLink(at viewPoint: CGPoint) -> Bool {
+        guard let page = pdfView.page(for: viewPoint, nearest: false) else { return false }
+        let point = pdfView.convert(viewPoint, to: page)
+        guard let link = page.annotations.last(where: { $0.type == "Link" && $0.bounds.insetBy(dx: -4, dy: -4).contains(point) })
+        else { return false }
+
+        if let pdf = document.pdf as? NotebookPDF, let state = pdf.layerToggle(for: link, on: page) {
+            pdf.optionalContent.apply(stateArray: state)
+            redrawAllPages()
+            return true
+        }
+        if let destination = link.destination {
+            pdfView.go(to: destination)
+            return true
+        }
+        switch link.action {
+        case let action as PDFActionGoTo:
+            pdfView.go(to: action.destination)
+        case let action as PDFActionURL:
+            if let url = action.url { UIApplication.shared.open(url) }
+        case let action as PDFActionNamed:
+            perform(action.name)
+        default:
+            return false
+        }
+        return true
+    }
+
+    private func perform(_ name: PDFActionNamedName) {
+        switch name {
+        case .nextPage: pdfView.goToNextPage(nil)
+        case .previousPage: pdfView.goToPreviousPage(nil)
+        case .firstPage: pdfView.goToFirstPage(nil)
+        case .lastPage: pdfView.goToLastPage(nil)
+        case .goBack: pdfView.goBack(nil)
+        case .goForward: pdfView.goForward(nil)
+        default: break
+        }
+    }
+
+    /// After a layer changes, PDFKit must re-render page content it has cached. It has no public
+    /// "redraw this page" call, and nudging its private tile layers leaves seams, so reload the
+    /// document into the view and return to the same spot and zoom. Thumbnails are rebuilt too.
+    private func redrawAllPages() {
+        for index in 0..<document.pdf.pageCount {
+            if let page = document.pdf.page(at: index) { sidebar.invalidateThumbnail(for: page) }
+        }
+        let anchor = readingPosition()
+        let autoScales = pdfView.autoScales
+        let scale = pdfView.scaleFactor
+        pdfView.document = nil
+        pdfView.document = document.pdf
+        pdfView.autoScales = autoScales
+        if !autoScales { pdfView.scaleFactor = scale }
+        pdfView.layoutDocumentView()
+        if let anchor { pdfView.go(to: PDFDestination(page: anchor.page, at: anchor.point)) }
+        applyMode(chrome.mode)
     }
 
     // MARK: Lasso
@@ -325,6 +388,9 @@ final class NotebookViewController: UIViewController {
         // Drawing and pointing: one finger acts, two scroll. Scroll mode: one finger scrolls.
         documentScrollView?.panGestureRecognizer.minimumNumberOfTouches = mode == .scroll ? 1 : 2
         objectEditor.isActive = mode == .scroll
+        // Markup mode hands touches to the ink canvases; outside drawing it's off, so PDFKit's own
+        // long-press text selection (and Copy) works on the PDF's text.
+        if pdfView.isInMarkupMode != (mode == .draw) { pdfView.isInMarkupMode = mode == .draw }
         updateLassos(for: mode)
         laser?.isActive = mode == .laser
         syncPalette(for: mode)
